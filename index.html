@@ -2,8 +2,9 @@
 <html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lumina Bíblia - Palavra Sagrada</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,16 +14,19 @@
                 extend: {
                     colors: {
                         gold: {
+                            300: '#fde047',
                             400: '#facc15',
                             500: '#eab308',
                             600: '#ca8a04',
                             700: '#a16207',
+                            800: '#854d0e'
                         },
                         bible: {
-                            dark: '#0f172a',
-                            card: '#1e293b',
-                            paper: '#fcfbf7',
-                            paperCard: '#f1f0ea'
+                            darkBg: '#090d16',
+                            darkCard: '#131b2e',
+                            lightBg: '#f8fafc',
+                            lightCard: '#ffffff',
+                            paper: '#fcfbf7'
                         }
                     },
                     fontFamily: {
@@ -33,92 +37,125 @@
             }
         }
     </script>
+    
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles & Adaptive Design -->
     <style>
+        :root {
+            --bg-overlay-color: rgba(9, 13, 22, 0.82);
+            --card-glass-bg: rgba(19, 27, 46, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-gold: #facc15;
+            --verse-hover: rgba(255, 255, 255, 0.05);
+        }
+
+        html:not(.dark) {
+            --bg-overlay-color: rgba(248, 250, 252, 0.88);
+            --card-glass-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-gold: #d97706;
+            --verse-hover: rgba(15, 23, 42, 0.04);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            transition: background-color 0.3s, color 0.3s;
+            background-color: #090d16;
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            min-height: 100dvh;
         }
+
         .font-scripture {
             font-family: 'Cormorant Garamond', Georgia, serif;
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.4);
-            border-radius: 9999px;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        /* Color Highlighters */
-        .hl-yellow { background-color: rgba(254, 240, 138, 0.5); }
-        .dark .hl-yellow { background-color: rgba(161, 98, 7, 0.4); color: #fef08a; }
-        
-        .hl-green { background-color: rgba(187, 247, 208, 0.5); }
-        .dark .hl-green { background-color: rgba(21, 128, 61, 0.4); color: #bbf7d0; }
-        
-        .hl-blue { background-color: rgba(191, 219, 254, 0.5); }
-        .dark .hl-blue { background-color: rgba(29, 78, 216, 0.4); color: #bfdbfe; }
-        
-        .hl-pink { background-color: rgba(251, 207, 232, 0.5); }
-        .dark .hl-pink { background-color: rgba(190, 24, 93, 0.4); color: #fbcfe8; }
 
+        /* Glassmorphism Panel */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: var(--card-glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
-        .light .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+
+        /* Highlighters */
+        .hl-yellow { background-color: rgba(250, 204, 21, 0.35); border-radius: 6px; padding: 2px 4px; }
+        .hl-green  { background-color: rgba(34, 197, 94, 0.35); border-radius: 6px; padding: 2px 4px; }
+        .hl-blue   { background-color: rgba(56, 189, 248, 0.35); border-radius: 6px; padding: 2px 4px; }
+        .hl-pink   { background-color: rgba(244, 114, 182, 0.35); border-radius: 6px; padding: 2px 4px; }
+
+        html:not(.dark) .hl-yellow { background-color: rgba(253, 224, 71, 0.5); }
+        html:not(.dark) .hl-green  { background-color: rgba(134, 239, 172, 0.5); }
+        html:not(.dark) .hl-blue   { background-color: rgba(147, 197, 253, 0.5); }
+        html:not(.dark) .hl-pink   { background-color: rgba(249, 168, 212, 0.5); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+
+        /* Dynamic viewport adjustments for bottom bar */
+        .pb-safe-bottom {
+            padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+        }
+
+        /* Bottom sheet styling on mobile */
+        @media (max-width: 640px) {
+            .mobile-bottom-sheet {
+                border-bottom-left-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                max-height: 85vh;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col relative overflow-x-hidden">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-amber-500 selection:text-slate-950">
 
-    <!-- Camada de Plano de Fundo Personalizado -->
-    <div id="bg-layer" class="fixed inset-0 z-0 bg-cover bg-center transition-all duration-500 pointer-events-none" 
+    <!-- Background Image Layer -->
+    <div id="bg-layer" class="fixed inset-0 z-0 bg-cover bg-center transition-all duration-700 pointer-events-none" 
          style="background-image: url('https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=2000&auto=format&fit=crop');">
     </div>
-    <!-- Overlay de Escurecimento e Desfoque -->
-    <div id="bg-overlay" class="fixed inset-0 z-0 bg-slate-950/80 backdrop-blur-sm transition-all duration-300 pointer-events-none"></div>
 
-    <!-- Container Principal do App -->
-    <div class="relative z-10 flex flex-col min-h-screen max-w-5xl mx-auto w-full px-3 sm:px-6">
+    <!-- Background Adaptive Contrast Overlay -->
+    <div id="bg-overlay" class="fixed inset-0 z-0 transition-all duration-500 pointer-events-none" style="background-color: var(--bg-overlay-color); backdrop-filter: blur(4px);"></div>
 
-        <!-- HEADER / CABEÇALHO -->
-        <header class="py-4 border-b border-slate-800/80 flex items-center justify-between gap-2 mt-2">
-            <!-- Logo & Nome -->
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('reader')">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-amber-500/20">
-                    <i class="fa-solid font-bold fa-book-bible"></i>
+    <!-- App Container -->
+    <div class="relative z-10 flex flex-col min-h-screen max-w-5xl mx-auto w-full px-3 sm:px-6 pb-24 md:pb-8">
+
+        <!-- HEADER PRINCIPAL -->
+        <header class="py-3 sm:py-4 border-b border-slate-700/30 flex items-center justify-between gap-3 mt-1 sm:mt-2">
+            <!-- Logo & Brand -->
+            <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onclick="switchTab('reader')">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-xl shadow-lg shadow-amber-500/20 shrink-0">
+                    <i class="fa-solid fa-book-bible"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg sm:text-xl tracking-tight text-amber-400 flex items-center gap-2">
+                    <h1 class="font-extrabold text-base sm:text-xl tracking-tight text-amber-500 dark:text-amber-400 flex items-center gap-1.5">
                         Lumina Bíblia
-                        <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Pura</span>
+                        <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">Pura</span>
                     </h1>
-                    <p class="text-xs text-slate-400 font-medium hidden sm:block">A Palavra Sagrada em Alta Definição</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">A Palavra Sagrada em Alta Definição</p>
                 </div>
             </div>
 
-            <!-- Botões Rápidos de Ação -->
+            <!-- Header Quick Controls -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <!-- Seletor Rápido de Versão -->
+                <!-- Bible Version Selector -->
                 <div class="relative">
-                    <select id="header-version-select" onchange="changeVersion(this.value)" class="bg-slate-800/90 hover:bg-slate-700 text-amber-400 font-semibold text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-700/80 cursor-pointer focus:outline-none focus:border-amber-500 transition-colors">
+                    <select id="header-version-select" onchange="changeVersion(this.value)" class="glass-panel text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm px-2.5 sm:px-3 py-2 rounded-xl focus:outline-none cursor-pointer transition-all">
                         <option value="NVI">NVI - Nova Versão Internacional</option>
                         <option value="ARC">ARC - Almeida Revista e Corrigida</option>
                         <option value="NAA">NAA - Nova Almeida Atualizada</option>
@@ -126,133 +163,150 @@
                     </select>
                 </div>
 
-                <!-- Botão Personalizar Visual -->
-                <button onclick="openBgModal()" title="Personalizar Fundo" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-amber-400 border border-slate-700/80 transition-all">
-                    <i class="fa-solid fa-palette text-sm"></i>
+                <!-- Personalize Visual Modal Button -->
+                <button onclick="openBgModal()" title="Personalizar Visual" class="glass-panel p-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-palette text-sm sm:text-base"></i>
                 </button>
 
-                <!-- Alternador de Tema Dark/Light -->
-                <button onclick="toggleTheme()" title="Alternar Tema" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-amber-400 border border-slate-700/80 transition-all">
-                    <i id="theme-icon" class="fa-solid fa-moon text-sm"></i>
+                <!-- Theme Toggle Button (Light/Dark Mode) -->
+                <button id="theme-toggle-btn" onclick="toggleTheme()" title="Alternar Tema Claro/Escuro" class="glass-panel p-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-all flex items-center justify-center gap-2">
+                    <i id="theme-icon" class="fa-solid fa-moon text-sm sm:text-base text-amber-500"></i>
+                    <span id="theme-text" class="text-xs font-semibold hidden md:inline">Tema Escuro</span>
                 </button>
             </div>
         </header>
 
-        <!-- NAVEGAÇÃO ENTRE ABAS -->
-        <nav class="flex items-center gap-2 py-3 border-b border-slate-800/50 overflow-x-auto no-scrollbar my-2">
-            <button id="tab-btn-reader" onclick="switchTab('reader')" class="tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-amber-500/10 text-amber-400 border border-amber-500/30">
+        <!-- NAVIGATION BAR (Desktop & Tablet Navigation) -->
+        <nav class="hidden md:flex items-center gap-2 py-3 border-b border-slate-700/30 my-2">
+            <button id="tab-btn-reader" onclick="switchTab('reader')" class="tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                 <i class="fa-solid fa-book-open"></i> Leitura Bíblica
             </button>
-            <button id="tab-btn-stories" onclick="switchTab('stories')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all">
+            <button id="tab-btn-stories" onclick="switchTab('stories')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
                 <i class="fa-solid fa-masks-theater"></i> Histórias Contadas
             </button>
-            <button id="tab-btn-devotional" onclick="switchTab('devotional')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all">
+            <button id="tab-btn-devotional" onclick="switchTab('devotional')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
                 <i class="fa-solid fa-sun"></i> Devocional Diário
-                <span id="streak-badge" class="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px]">🔥 3</span>
+                <span id="streak-badge" class="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px]">🔥 3</span>
             </button>
         </nav>
 
-        <!-- ABA 1: LEITOR BÍBLICO -->
-        <section id="tab-content-reader" class="tab-content flex-1 flex flex-col py-2">
-            <!-- Barra de Seleção de Livro e Capítulo -->
-            <div class="glass-panel p-3 sm:p-4 rounded-2xl border border-slate-800 mb-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
-                <button onclick="openBookModal()" class="flex items-center gap-3 bg-slate-800/90 hover:bg-slate-700/90 px-4 py-2.5 rounded-xl border border-slate-700/80 transition-all text-left">
-                    <i class="fa-solid fa-list-ul text-amber-400 text-base"></i>
+        <!-- TAB 1: BIBLE READER -->
+        <section id="tab-content-reader" class="tab-content flex-1 flex flex-col py-3">
+            
+            <!-- Book & Chapter Selector Bar -->
+            <div class="glass-panel p-3 sm:p-4 rounded-2xl mb-4 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <button onclick="openBookModal()" class="flex items-center gap-3 bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 px-4 py-2.5 rounded-xl transition-all text-left border border-slate-300/50 dark:border-slate-700/50">
+                    <i class="fa-solid fa-list-ul text-amber-600 dark:text-amber-400 text-base"></i>
                     <div>
-                        <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Livro e Capítulo</div>
-                        <div id="current-location-text" class="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
-                            Gênesis 1 <i class="fa-solid fa-chevron-down text-xs text-amber-400"></i>
+                        <div class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Livro e Capítulo</div>
+                        <div id="current-location-text" class="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            Gênesis 1 <i class="fa-solid fa-chevron-down text-xs text-amber-500"></i>
                         </div>
                     </div>
                 </button>
 
-                <!-- Badge da Versão Atual sem Texto Entre Parênteses -->
+                <!-- Active Version Badge & Listen Button -->
                 <div class="flex items-center gap-2">
-                    <span id="version-badge" class="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5">
+                    <span id="version-badge" class="px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5">
                         <i class="fa-solid fa-check text-[10px]"></i>
                         <span id="version-badge-code">NVI</span>
                     </span>
 
-                    <!-- Botão Ouvir Capítulo -->
                     <button id="btn-play-chapter" onclick="playCurrentChapter()" class="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-95">
                         <i class="fa-solid fa-play"></i> <span class="hidden sm:inline">Ouvir Capítulo</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Área do Texto Bíblico -->
-            <div class="glass-panel p-4 sm:p-8 rounded-2xl border border-slate-800/80 shadow-2xl flex-1 mb-24 relative">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
-                    <button onclick="navigateChapter(-1)" class="text-slate-400 hover:text-amber-400 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-colors">
-                        <i class="fa-solid fa-arrow-left"></i> Capítulo Anterior
+            <!-- Reading Panel Container (Centered Width for optimal desktop legibility) -->
+            <div class="w-full max-w-3xl mx-auto glass-panel p-4 sm:p-8 rounded-2xl shadow-xl flex-1 mb-6 relative">
+                <!-- Chapter Top Navigation Header -->
+                <div class="flex items-center justify-between border-b border-slate-300/40 dark:border-slate-700/50 pb-4 mb-6">
+                    <button onclick="navigateChapter(-1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
+                        <i class="fa-solid fa-chevron-left"></i> <span class="hidden sm:inline">Capítulo Anterior</span>
                     </button>
-                    <h2 id="chapter-title-heading" class="text-xl sm:text-2xl font-bold font-scripture text-amber-400 tracking-wide text-center">
+                    <h2 id="chapter-title-heading" class="text-xl sm:text-3xl font-bold font-scripture text-amber-600 dark:text-amber-400 tracking-wide text-center">
                         Gênesis 1
                     </h2>
-                    <button onclick="navigateChapter(1)" class="text-slate-400 hover:text-amber-400 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-colors">
-                        Próximo Capítulo <i class="fa-solid fa-arrow-right"></i>
+                    <button onclick="navigateChapter(1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
+                        <span class="hidden sm:inline">Próximo Capítulo</span> <i class="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <!-- Lista de Versículos -->
-                <div id="verses-container" class="space-y-4 font-scripture text-lg sm:text-xl leading-relaxed text-slate-200">
-                    <!-- Os versículos serão injetados dinamicamente via JS de forma 100% limpa -->
+                <!-- Verses List -->
+                <div id="verses-container" class="space-y-4 font-scripture leading-relaxed">
+                    <!-- Verses dynamically rendered without parenthesis -->
+                </div>
+
+                <!-- Bottom Chapter Navigation -->
+                <div class="flex items-center justify-between border-t border-slate-300/40 dark:border-slate-700/50 pt-6 mt-8">
+                    <button onclick="navigateChapter(-1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i> Anterior
+                    </button>
+                    <button onclick="openBookModal()" class="text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline">
+                        Trocar Capítulo
+                    </button>
+                    <button onclick="navigateChapter(1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors">
+                        Próximo <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
         </section>
 
-        <!-- ABA 2: HISTÓRIAS CONTADAS -->
+        <!-- TAB 2: HISTÓRIAS CONTADAS & DRAMATIZADAS -->
         <section id="tab-content-stories" class="tab-content hidden flex-1 py-4">
             <div class="mb-6">
-                <h2 class="text-2xl font-bold text-amber-400 font-scripture">Histórias Contadas & Dramatizadas</h2>
-                <p class="text-xs sm:text-sm text-slate-400">Ouça passagens marcantes da Bíblia com trilha sonora e imersão em áudio.</p>
+                <h2 class="text-2xl font-bold text-amber-600 dark:text-amber-400 font-scripture">Histórias Contadas & Dramatizadas</h2>
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Ouça passagens marcantes da Bíblia com imersão narrativa e trilha inspiradora.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="stories-grid">
-                <!-- Cards de Histórias Injetados via JS -->
+                <!-- Story Cards injected via JS -->
             </div>
         </section>
 
-        <!-- ABA 3: DEVOCIONAL DIÁRIO -->
+        <!-- TAB 3: DEVOCIONAL DIÁRIO -->
         <section id="tab-content-devotional" class="tab-content hidden flex-1 py-4 space-y-6">
-            <!-- Card Versículo do Dia -->
-            <div class="glass-panel p-6 rounded-2xl border border-amber-500/30 relative overflow-hidden bg-gradient-to-br from-amber-500/5 to-transparent">
+            <!-- Daily Verse Card -->
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden bg-gradient-to-br from-amber-500/10 to-transparent">
                 <div class="flex items-center justify-between mb-4">
-                    <span class="text-xs uppercase tracking-widest font-bold text-amber-400 flex items-center gap-2">
+                    <span class="text-xs uppercase tracking-widest font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-2">
                         <i class="fa-solid fa-star"></i> Versículo do Dia
                     </span>
-                    <span class="text-xs text-slate-400" id="devotional-date">13 de Outubro</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium" id="devotional-date">Hoje</span>
                 </div>
-                <blockquote id="daily-verse-text" class="font-scripture text-xl sm:text-2xl italic text-slate-100 mb-4">
+                <blockquote id="daily-verse-text" class="font-scripture text-xl sm:text-2xl italic text-slate-900 dark:text-slate-100 mb-4 leading-relaxed">
                     "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
                 </blockquote>
                 <div class="flex items-center justify-between">
-                    <span id="daily-verse-ref" class="font-bold text-amber-400 text-sm">Salmos 121:8</span>
-                    <button onclick="shareDailyVerse()" class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold flex items-center gap-2 transition-all">
+                    <span id="daily-verse-ref" class="font-bold text-amber-600 dark:text-amber-400 text-sm sm:text-base">Salmos 121:8</span>
+                    <button onclick="shareDailyVerse()" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2 transition-all">
                         <i class="fa-solid fa-share-nodes"></i> Compartilhar
                     </button>
                 </div>
             </div>
 
-            <!-- Oração e Reflexão -->
+            <!-- Guided Prayer and Streak Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass-panel p-5 rounded-2xl border border-slate-800">
-                    <h3 class="font-bold text-amber-400 text-base mb-2 flex items-center gap-2">
+                <div class="glass-panel p-5 rounded-2xl space-y-2">
+                    <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base mb-1 flex items-center gap-2">
                         <i class="fa-solid fa-hands-praying"></i> Oração Guiada
                     </h3>
-                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-                        "Senhor, guarda meus passos no dia de hoje. Que a Tua Palavra pura seja a lâmpada para os meus pés e a luz para o meu caminho. Conceda-me sabedoria e paz em cada decisão. Amém."
+                    <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                        "Senhor Deus, guia meus passos no dia de hoje. Que Tua palavra pura seja lâmpada para os meus pés e luz para o meu caminho. Conceda-me sabedoria, paz e proteção em cada decisão. Amém."
                     </p>
                 </div>
 
-                <div class="glass-panel p-5 rounded-2xl border border-slate-800">
-                    <h3 class="font-bold text-amber-400 text-base mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> Sua Leitura Diária
-                    </h3>
-                    <p class="text-xs text-slate-400 mb-3">Mantenha seu hábito de leitura bíblica ativo todos os dias.</p>
-                    <div class="flex items-center gap-3">
-                        <div class="text-3xl font-bold text-amber-400" id="streak-days">3 Dias</div>
-                        <button onclick="registerDevotionalRead()" id="btn-check-streak" class="ml-auto bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl shadow-lg transition-all">
+                <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div>
+                        <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-fire"></i> Sua Sequência Diária
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Mantenha seu hábito de estudo bíblico ativo todos os dias.</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="text-3xl font-extrabold text-amber-600 dark:text-amber-400" id="streak-days">3 Dias</div>
+                        <button onclick="registerDevotionalRead()" id="btn-check-streak" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1.5">
                             <i class="fa-solid fa-check"></i> Marcar Lido Hoje
                         </button>
                     </div>
@@ -260,44 +314,46 @@
             </div>
         </section>
 
-    </div> <!-- Fim Container Principal -->
+    </div> <!-- End Main App Container -->
 
-    <!-- PLAYER DE ÁUDIO FLUTUANTE -->
-    <div id="audio-player-bar" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-2xl glass-panel border border-slate-700/80 rounded-2xl p-3 shadow-2xl transition-all transform translate-y-32 opacity-0">
+    <!-- FLOATING AUDIO PLAYER (Responsive Positioned above Mobile Bottom Nav) -->
+    <div id="audio-player-bar" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-xl glass-panel rounded-2xl p-3 sm:p-4 shadow-2xl transition-all duration-300 transform translate-y-40 opacity-0 pointer-events-none">
         <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3 truncate">
-                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                         <i id="player-status-icon" class="fa-solid fa-headphones text-sm"></i>
                     </div>
                     <div class="truncate">
-                        <div id="player-title" class="text-xs sm:text-sm font-bold text-slate-100 truncate">Gênesis 1 - NVI</div>
-                        <div id="player-subtitle" class="text-[10px] text-slate-400 truncate">Modo Narração Contínua</div>
+                        <div id="player-title" class="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">Gênesis 1 - NVI</div>
+                        <div id="player-subtitle" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Modo Narração Contínua</div>
                     </div>
                 </div>
 
-                <!-- Botão Drama Toggle -->
-                <button id="btn-drama-toggle" onclick="toggleDramaMode()" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-amber-400 text-[10px] font-semibold border border-slate-700 flex items-center gap-1.5 transition-colors">
-                    <i class="fa-solid fa-music"></i> <span id="drama-mode-label">Trilha Drama: OFF</span>
+                <!-- Drama Mode Toggle -->
+                <button id="btn-drama-toggle" onclick="toggleDramaMode()" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-bold border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition-colors">
+                    <i class="fa-solid fa-music"></i> <span id="drama-mode-label">Drama: OFF</span>
                 </button>
 
-                <!-- Botão Fechar Player -->
-                <button onclick="stopAudio()" class="text-slate-400 hover:text-rose-400 text-sm p-1 ml-2">
+                <!-- Close Audio Button -->
+                <button onclick="stopAudio()" class="text-slate-400 hover:text-rose-500 text-base p-1.5 ml-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Progresso e Controles -->
+            <!-- Audio Controls -->
             <div class="flex items-center gap-3 mt-1">
-                <button onclick="toggleAudioPlayPause()" id="btn-audio-play-pause" class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center shrink-0 hover:scale-105 transition-all">
+                <button onclick="toggleAudioPlayPause()" id="btn-audio-play-pause" class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center shrink-0 hover:scale-105 transition-all shadow">
                     <i class="fa-solid fa-pause text-xs"></i>
                 </button>
 
-                <div class="flex-1 flex items-center gap-2">
-                    <input type="range" id="audio-progress-bar" value="0" max="100" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                <div class="flex-1 flex items-center">
+                    <div class="w-full bg-slate-300 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div id="audio-progress-fill" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                    </div>
                 </div>
 
-                <select id="audio-speed-select" onchange="changeAudioSpeed(this.value)" class="bg-slate-800 text-slate-300 text-[11px] font-bold px-2 py-1 rounded-lg border border-slate-700 focus:outline-none">
+                <select id="audio-speed-select" onchange="changeAudioSpeed(this.value)" class="bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[11px] font-bold px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 focus:outline-none">
                     <option value="0.8">0.8x</option>
                     <option value="1.0" selected>1.0x</option>
                     <option value="1.25">1.25x</option>
@@ -307,184 +363,226 @@
         </div>
     </div>
 
-    <!-- MODAL 1: SELEÇÃO DE LIVROS E CAPÍTULOS -->
-    <div id="modal-books" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                <h3 class="font-bold text-amber-400 text-lg flex items-center gap-2">
+    <!-- MOBILE BOTTOM NAVIGATION BAR (Thumb Ergonomic for Mobile Users) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-slate-300/40 dark:border-slate-700/50 px-2 py-2 flex items-center justify-around shadow-2xl">
+        <button onclick="switchTab('reader')" id="mob-nav-reader" class="flex flex-col items-center gap-1 text-amber-600 dark:text-amber-400 p-1.5 rounded-xl">
+            <i class="fa-solid fa-book-open text-lg"></i>
+            <span class="text-[10px] font-bold">Leitura</span>
+        </button>
+        <button onclick="switchTab('stories')" id="mob-nav-stories" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl">
+            <i class="fa-solid fa-masks-theater text-lg"></i>
+            <span class="text-[10px] font-bold">Histórias</span>
+        </button>
+        <button onclick="switchTab('devotional')" id="mob-nav-devotional" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl">
+            <i class="fa-solid fa-sun text-lg"></i>
+            <span class="text-[10px] font-bold">Devocional</span>
+        </button>
+        <button onclick="openBookModal()" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl">
+            <i class="fa-solid fa-list-ul text-lg"></i>
+            <span class="text-[10px] font-bold">Livros</span>
+        </button>
+        <button onclick="openBgModal()" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl">
+            <i class="fa-solid fa-palette text-lg"></i>
+            <span class="text-[10px] font-bold">Visual</span>
+        </button>
+    </nav>
+
+    <!-- MODAL 1: BIBLE BOOKS & CHAPTERS SELECTOR -->
+    <div id="modal-books" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-3xl rounded-t-3xl sm:rounded-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden mobile-bottom-sheet">
+            <div class="p-4 border-b border-slate-300/50 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="font-bold text-amber-600 dark:text-amber-400 text-lg flex items-center gap-2">
                     <i class="fa-solid fa-book-bible"></i> Selecionar Livro & Capítulo
                 </h3>
-                <button onclick="closeBookModal()" class="text-slate-400 hover:text-slate-100 p-2">
+                <button onclick="closeBookModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 p-2">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- Navegação OT / NT -->
-            <div class="flex border-b border-slate-800">
-                <button onclick="switchTestament('ot')" id="tab-ot-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-amber-400 border-b-2 border-amber-400 bg-slate-800/40">
+            <!-- Search Book Bar -->
+            <div class="p-3 border-b border-slate-300/40 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/50">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="book-search-input" oninput="filterBooks(this.value)" placeholder="Buscar livro (ex: Salmos, João, Gênesis)..." class="w-full bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 pl-9 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-medium focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <!-- OT / NT Testament Tabs -->
+            <div class="flex border-b border-slate-300/50 dark:border-slate-800">
+                <button onclick="switchTestament('ot')" id="tab-ot-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40">
                     Antigo Testamento (39)
                 </button>
-                <button onclick="switchTestament('nt')" id="tab-nt-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent">
+                <button onclick="switchTestament('nt')" id="tab-nt-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent">
                     Novo Testamento (27)
                 </button>
             </div>
 
-            <!-- Grade de Livros / Capítulos -->
+            <!-- Books & Chapters Content Grid -->
             <div class="p-4 overflow-y-auto flex-1 space-y-4">
                 <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    <!-- Livros Injetados via JS -->
+                    <!-- Dynamic Books Grid -->
                 </div>
 
-                <!-- Painel de Seleção de Capítulos (Injetado dinamicamente) -->
-                <div id="chapters-picker-section" class="hidden border-t border-slate-800 pt-4 mt-4">
-                    <h4 id="selected-book-name-title" class="font-bold text-amber-400 text-sm mb-3">Selecione o Capítulo:</h4>
+                <div id="chapters-picker-section" class="hidden border-t border-slate-300/50 dark:border-slate-800 pt-4 mt-4">
+                    <h4 id="selected-book-name-title" class="font-bold text-amber-600 dark:text-amber-400 text-sm mb-3">Selecione o Capítulo:</h4>
                     <div id="chapters-grid" class="grid grid-cols-6 sm:grid-cols-10 gap-2"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: PERSONALIZAR PLANO DE FUNDO -->
-    <div id="modal-bg" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-amber-400 text-base flex items-center gap-2">
+    <!-- MODAL 2: CUSTOMIZE VISUAL & BACKGROUND -->
+    <div id="modal-bg" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-5 mobile-bottom-sheet">
+            <div class="flex items-center justify-between border-b border-slate-300/50 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base flex items-center gap-2">
                     <i class="fa-solid fa-palette"></i> Visual e Plano de Fundo
                 </h3>
-                <button onclick="closeBgModal()" class="text-slate-400 hover:text-slate-100">
-                    <i class="fa-solid fa-xmark"></i>
+                <button onclick="closeBgModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- Sliders de Opacidade e Blur -->
+            <!-- Theme Switch Quick Button in Modal -->
+            <div class="flex items-center justify-between bg-slate-200/70 dark:bg-slate-800/70 p-3 rounded-xl">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-half-stroke text-amber-500"></i>
+                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Modo de Aparência</span>
+                </div>
+                <button onclick="toggleTheme()" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 text-xs font-bold shadow">
+                    Alternar Tema
+                </button>
+            </div>
+
+            <!-- Sliders for Opacity, Blur, Font Size -->
             <div class="space-y-4">
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-slate-300 mb-1">
-                        <span>Escurecimento (Overlay)</span>
-                        <span id="label-opacity">80%</span>
+                    <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <span>Escurecimento / Contraste (Overlay)</span>
+                        <span id="label-opacity">82%</span>
                     </div>
-                    <input type="range" id="slider-opacity" min="0" max="95" value="80" oninput="updateBgSettings()" class="w-full accent-amber-500">
+                    <input type="range" id="slider-opacity" min="10" max="95" value="82" oninput="updateBgSettings()" class="w-full accent-amber-500 cursor-pointer">
                 </div>
 
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-slate-300 mb-1">
+                    <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                         <span>Desfoque de Fundo (Blur)</span>
                         <span id="label-blur">4px</span>
                     </div>
-                    <input type="range" id="slider-blur" min="0" max="20" value="4" oninput="updateBgSettings()" class="w-full accent-amber-500">
+                    <input type="range" id="slider-blur" min="0" max="20" value="4" oninput="updateBgSettings()" class="w-full accent-amber-500 cursor-pointer">
                 </div>
 
                 <div>
-                    <div class="flex justify-between text-xs font-bold text-slate-300 mb-1">
-                        <span>Tamanho da Fonte</span>
-                        <span id="label-font-size">Médio</span>
+                    <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <span>Tamanho da Fonte de Leitura</span>
+                        <span id="label-font-size">20px</span>
                     </div>
-                    <input type="range" id="slider-font-size" min="16" max="28" value="20" oninput="updateFontSize(this.value)" class="w-full accent-amber-500">
+                    <input type="range" id="slider-font-size" min="16" max="28" value="20" oninput="updateFontSize(this.value)" class="w-full accent-amber-500 cursor-pointer">
                 </div>
             </div>
 
-            <!-- Upload da Imagem do Usuário -->
+            <!-- Custom User Image Upload -->
             <div>
-                <label class="block text-xs font-bold text-slate-300 mb-2">Enviar Foto Própria:</label>
-                <input type="file" id="user-bg-file" accept="image/*" onchange="handleUserBgUpload(event)" class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-400 hover:file:bg-amber-500/30 cursor-pointer">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Enviar Foto Própria:</label>
+                <input type="file" id="user-bg-file" accept="image/*" onchange="handleUserBgUpload(event)" class="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/20 file:text-amber-600 dark:file:text-amber-400 hover:file:bg-amber-500/30 cursor-pointer">
             </div>
 
-            <!-- Presets de Imagem -->
+            <!-- Background Preset Images -->
             <div>
-                <label class="block text-xs font-bold text-slate-300 mb-2">Imagens Prontas:</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Galeria de Imagens:</label>
                 <div class="grid grid-cols-4 gap-2">
-                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=2000')" class="h-14 rounded-lg bg-cover bg-center border border-slate-700 hover:border-amber-400 transition-all" style="background-image: url('https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=200')"></button>
-                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000')" class="h-14 rounded-lg bg-cover bg-center border border-slate-700 hover:border-amber-400 transition-all" style="background-image: url('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=200')"></button>
-                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000')" class="h-14 rounded-lg bg-cover bg-center border border-slate-700 hover:border-amber-400 transition-all" style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=200')"></button>
-                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=2000')" class="h-14 rounded-lg bg-cover bg-center border border-slate-700 hover:border-amber-400 transition-all" style="background-image: url('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=200')"></button>
+                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=2000')" class="h-14 rounded-xl bg-cover bg-center border border-slate-300 dark:border-slate-700 hover:border-amber-500 transition-all shadow" style="background-image: url('https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=200')"></button>
+                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000')" class="h-14 rounded-xl bg-cover bg-center border border-slate-300 dark:border-slate-700 hover:border-amber-500 transition-all shadow" style="background-image: url('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=200')"></button>
+                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000')" class="h-14 rounded-xl bg-cover bg-center border border-slate-300 dark:border-slate-700 hover:border-amber-500 transition-all shadow" style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=200')"></button>
+                    <button onclick="setBgPreset('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=2000')" class="h-14 rounded-xl bg-cover bg-center border border-slate-300 dark:border-slate-700 hover:border-amber-500 transition-all shadow" style="background-image: url('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=200')"></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 3: MENU FLUTUANTE DO VERSÍCULO (Grifar, Copiar, Nota, Card) -->
-    <div id="modal-verse-action" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-5 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span id="verse-action-title" class="font-bold text-amber-400 text-sm">Gênesis 1:1</span>
-                <button onclick="closeVerseModal()" class="text-slate-400 hover:text-slate-100">
-                    <i class="fa-solid fa-xmark"></i>
+    <!-- MODAL 3: VERSE ACTION SHEET (Highlight, Copy, Notes, Card Generator) -->
+    <div id="modal-verse-action" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4 mobile-bottom-sheet">
+            <div class="flex items-center justify-between border-b border-slate-300/50 dark:border-slate-800 pb-2">
+                <span id="verse-action-title" class="font-bold text-amber-600 dark:text-amber-400 text-sm">Gênesis 1:1</span>
+                <button onclick="closeVerseModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- Preview do Versículo -->
-            <p id="verse-action-text" class="text-slate-200 font-scripture italic text-base leading-relaxed bg-slate-800/40 p-3 rounded-xl border border-slate-800">
+            <!-- Verse Preview Box -->
+            <p id="verse-action-text" class="text-slate-800 dark:text-slate-200 font-scripture italic text-base sm:text-lg leading-relaxed bg-slate-200/50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-300/40 dark:border-slate-800">
                 ""
             </p>
 
-            <!-- Opções de Destaque / Grifar -->
+            <!-- Highlight Palette -->
             <div>
-                <label class="block text-xs font-bold text-slate-400 mb-2">Grifar Versículo:</label>
+                <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">Grifar Versículo:</label>
                 <div class="flex items-center gap-3">
-                    <button onclick="applyHighlight('yellow')" class="w-8 h-8 rounded-full bg-yellow-400/80 border-2 border-yellow-200 hover:scale-110 transition-transform"></button>
-                    <button onclick="applyHighlight('green')" class="w-8 h-8 rounded-full bg-emerald-400/80 border-2 border-emerald-200 hover:scale-110 transition-transform"></button>
-                    <button onclick="applyHighlight('blue')" class="w-8 h-8 rounded-full bg-sky-400/80 border-2 border-sky-200 hover:scale-110 transition-transform"></button>
-                    <button onclick="applyHighlight('pink')" class="w-8 h-8 rounded-full bg-pink-400/80 border-2 border-pink-200 hover:scale-110 transition-transform"></button>
-                    <button onclick="applyHighlight(null)" class="text-xs text-rose-400 font-semibold ml-auto hover:underline">Remover Destaque</button>
+                    <button onclick="applyHighlight('yellow')" title="Amarelo" class="w-8 h-8 rounded-full bg-yellow-400 border-2 border-yellow-200 hover:scale-110 transition-transform shadow"></button>
+                    <button onclick="applyHighlight('green')" title="Verde" class="w-8 h-8 rounded-full bg-emerald-400 border-2 border-emerald-200 hover:scale-110 transition-transform shadow"></button>
+                    <button onclick="applyHighlight('blue')" title="Azul" class="w-8 h-8 rounded-full bg-sky-400 border-2 border-sky-200 hover:scale-110 transition-transform shadow"></button>
+                    <button onclick="applyHighlight('pink')" title="Rosa" class="w-8 h-8 rounded-full bg-pink-400 border-2 border-pink-200 hover:scale-110 transition-transform shadow"></button>
+                    <button onclick="applyHighlight(null)" class="text-xs text-rose-500 font-bold ml-auto hover:underline">Remover Destaque</button>
                 </div>
             </div>
 
-            <!-- Botões de Ação Rápida -->
-            <div class="grid grid-cols-3 gap-2 pt-2">
-                <button onclick="copyCurrentVerse()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex flex-col items-center gap-1.5 transition-all">
-                    <i class="fa-solid fa-copy text-amber-400 text-sm"></i> Copiar
+            <!-- Quick Action Grid Buttons -->
+            <div class="grid grid-cols-3 gap-2.5 pt-2">
+                <button onclick="copyCurrentVerse()" class="p-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex flex-col items-center gap-2 transition-all">
+                    <i class="fa-solid fa-copy text-amber-500 text-base"></i> Copiar
                 </button>
-                <button onclick="openNoteDrawer()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex flex-col items-center gap-1.5 transition-all">
-                    <i class="fa-solid fa-pen-to-square text-amber-400 text-sm"></i> Nota Pessoal
+                <button onclick="openNoteDrawer()" class="p-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex flex-col items-center gap-2 transition-all">
+                    <i class="fa-solid fa-pen-to-square text-amber-500 text-base"></i> Anotação
                 </button>
-                <button onclick="generateVerseCard()" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex flex-col items-center gap-1.5 transition-all">
-                    <i class="fa-solid fa-image text-amber-400 text-sm"></i> Gerar Card
+                <button onclick="generateVerseCard()" class="p-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex flex-col items-center gap-2 transition-all">
+                    <i class="fa-solid fa-image text-amber-500 text-base"></i> Gerar Card
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 4: GERADOR DE CARD / FOTO DE VERSÍCULO -->
-    <div id="modal-card-generator" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 hidden">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <h3 class="font-bold text-amber-400 text-sm flex items-center gap-2">
+    <!-- MODAL 4: VERSE CARD GENERATOR FOR SOCIAL MEDIA -->
+    <div id="modal-card-generator" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col gap-4 mobile-bottom-sheet">
+            <div class="flex items-center justify-between border-b border-slate-300/50 dark:border-slate-800 pb-2">
+                <h3 class="font-bold text-amber-600 dark:text-amber-400 text-sm flex items-center gap-2">
                     <i class="fa-solid fa-image"></i> Card para Redes Sociais
                 </h3>
-                <button onclick="closeCardModal()" class="text-slate-400 hover:text-slate-100">
-                    <i class="fa-solid fa-xmark"></i>
+                <button onclick="closeCardModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- Canvas do Card -->
-            <div class="relative w-full aspect-square rounded-xl overflow-hidden shadow-2xl border border-slate-700 flex items-center justify-center bg-slate-950">
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl border border-slate-300 dark:border-slate-700 flex items-center justify-center bg-slate-950">
                 <canvas id="verse-card-canvas" width="600" height="600" class="w-full h-full object-contain"></canvas>
             </div>
 
-            <!-- Botão Baixar Imagem -->
-            <button onclick="downloadVerseCard()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+            <!-- Download Button -->
+            <button onclick="downloadVerseCard()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-95">
                 <i class="fa-solid fa-download"></i> Baixar Imagem para Compartilhar
             </button>
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION DE ALERTA SUAVE -->
-    <div id="toast" class="fixed top-5 right-5 z-50 bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl transition-all transform translate-y-[-100px] opacity-0 flex items-center gap-2">
-        <i class="fa-solid fa-circle-check"></i> <span id="toast-message">Notificação</span>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-5 right-5 z-50 bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-[-120px] opacity-0 flex items-center gap-2.5">
+        <i class="fa-solid fa-circle-check text-sm"></i> <span id="toast-message">Notificação</span>
     </div>
 
     <script>
-
-        // SANITIZADOR DE TEXTO BÍBLICO (Remove qualquer texto entre parênteses)
+        
+        // SANITIZADOR RIGOROSO DE TEXTO BÍBLICO (Remove absolutamente qualquer texto entre parênteses)
         function cleanScriptureText(text) {
             if (!text) return '';
-            // Remove rigorosamente tudo entre parênteses e seus parênteses, limpando espaços duplicados
+            // Substitui todas as ocorrências de (...) e reduz espaços duplos
             return text.replace(/\s*\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim();
         }
 
-        // LIVROS DA BÍBLIA (39 AT + 27 NT)
+        // BIBLE BOOKS DATA (39 Old Testament + 27 New Testament)
         const BIBLE_BOOKS = [
-            // Antigo Testamento
+            // Antigo Testamento (39)
             { id: 'GEN', name: 'Gênesis', testament: 'ot', chapters: 50 },
             { id: 'EXO', name: 'Êxodo', testament: 'ot', chapters: 40 },
             { id: 'LEV', name: 'Levítico', testament: 'ot', chapters: 27 },
@@ -525,7 +623,7 @@
             { id: 'ZEC', name: 'Zacarias', testament: 'ot', chapters: 14 },
             { id: 'MAL', name: 'Malaquias', testament: 'ot', chapters: 4 },
 
-            // Novo Testamento
+            // Novo Testamento (27)
             { id: 'MAT', name: 'Mateus', testament: 'nt', chapters: 28 },
             { id: 'MRK', name: 'Marcos', testament: 'nt', chapters: 16 },
             { id: 'LUK', name: 'Lucas', testament: 'nt', chapters: 24 },
@@ -555,7 +653,6 @@
             { id: 'REV', name: 'Apocalipse', testament: 'nt', chapters: 22 }
         ];
 
-        // BASE DE DADOS BÍBLICA PURA - NVI, ARC, NAA, NVT (100% sem textos explicativos entre parênteses)
         const BIBLE_DATA = {
             NVI: {
                 GEN: {
@@ -577,7 +674,7 @@
                 PSA: {
                     23: [
                         "O SENHOR é o meu pastor; nada me faltará.",
-                        "Em verdes pastagens me faz descansar e me conduz a águas tranqüilas.",
+                        "Em verdes pastagens me faz descansar e me conduz a águas tranquilas.",
                         "Restaura a minha alma; guia-me pelas veredas da justiça por amor do seu nome.",
                         "Mesmo que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo; a tua vara e o teu cajado me consolam.",
                         "Preparas um banquete para mim na presença dos meus inimigos. Unges a minha cabeça com óleo; o meu cálice transborda.",
@@ -611,13 +708,6 @@
                         "E disse Deus: Haja luz. E houve luz.",
                         "E viu Deus que era boa a luz; e fez Deus separação entre a luz e as trevas.",
                         "E Deus chamou à luz Dia; e às trevas chamou Noite. E foi a tarde e a manhã: o dia primeiro."
-                    ],
-                    2: [
-                        "Assim, os céus, a terra e todo o seu exército foram acabados.",
-                        "E, havendo Deus acabado no dia sétimo a sua obra, que tinha feito, descansou no sétimo dia de toda a sua obra, que tinha feito.",
-                        "E abençoou Deus o dia sétimo e o santificou; porque nele descansou de toda a sua obra, que Deus criara e fizera.",
-                        "Estas são as origens dos céus e da terra, quando foram criados.",
-                        "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
                     ]
                 },
                 PSA: {
@@ -628,24 +718,6 @@
                         "Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo; a tua vara e o teu cajado me consolam.",
                         "Preparas uma mesa perante mim na presença dos meus inimigos, unges a minha cabeça com óleo, o meu cálice transborda.",
                         "Certamente que a bondade e a misericórdia me seguirão todos os dias da minha vida; e habitarei na Casa do SENHOR por longos dias."
-                    ],
-                    121: [
-                        "Levantarei os meus olhos para os montes, de onde vem o meu socorro.",
-                        "O meu socorro vem do SENHOR, que fez o céu e a terra.",
-                        "Não deixará vacilar o teu pé; aquele que te guarda não dormitará.",
-                        "Eis que não dormitará nem dormirá o guarda de Israel.",
-                        "O SENHOR é quem te guarda; o SENHOR é a tua sombra à tua direita.",
-                        "O sol não te molestará de dia, nem a lua, de noite.",
-                        "O SENHOR te guardará de todo o mal; ele guardará a tua alma.",
-                        "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
-                    ]
-                },
-                JHN: {
-                    3: [
-                        "E havia entre os fariseus um homem chamado Nicodemos, príncipe dos judeus.",
-                        "Este foi ter de noite com Jesus e disse-lhe: Rabi, bem sabemos que és mestre vindo de Deus.",
-                        "Jesus respondeu e disse-lhe: Na verdade, na verdade te digo que aquele que não nascer de novo não pode ver o Reino de Deus.",
-                        "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."
                     ]
                 }
             },
@@ -657,41 +729,6 @@
                         "E Deus disse: Haja luz. E houve luz.",
                         "Deus viu que a luz era boa e fez separação entre a luz e as trevas.",
                         "Deus chamou à luz Dia e às trevas chamou Noite. Houve tarde e manhã: o primeiro dia."
-                    ],
-                    2: [
-                        "Assim foram concluídos os céus e a terra, com todo o seu exército.",
-                        "No sétimo dia, Deus já havia concluído a obra que realizara; e descansou nesse dia de toda a obra que fizera.",
-                        "Deus abençoou o sétimo dia e o santificou, porque nele descansou de toda a obra que realizara na criação.",
-                        "Esta é a história da criação dos céus e da terra.",
-                        "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
-                    ]
-                },
-                PSA: {
-                    23: [
-                        "O SENHOR é o meu pastor; nada me faltará.",
-                        "Ele me faz descansar em verdes pastos e me guia a águas tranquilas.",
-                        "Restaura as minhas forças e me guia pelas veredas da justiça por amor do seu nome.",
-                        "Ainda que eu ande pelo vale da sombra da morte, não temerei mal nenhum, porque tu estás comigo; a tua vara e o teu cajado me consolam.",
-                        "Preparas uma mesa para mim na presença dos meus inimigos, unges a minha cabeça com óleo; o meu cálice transborda.",
-                        "Com certeza a bondade e a misericórdia me seguirão todos os dias da minha vida, e habitarei na Casa do SENHOR para sempre."
-                    ],
-                    121: [
-                        "Levo os meus olhos para os montes: de onde me virá o socorro?",
-                        "O meu socorro vem do SENHOR, que fez o céu e a terra.",
-                        "Ele não permitirá que os seus pés vacilem; não dormitará aquele que guarda você.",
-                        "Com certeza não dormitará nem dormirá o guarda de Israel.",
-                        "O SENHOR é quem guarda você; o SENHOR é a sombra ao seu lado direito.",
-                        "O sol não causará dano de dia, nem a lua, de noite.",
-                        "O SENHOR guardará você de todo o mal; ele guardará a sua vida.",
-                        "O SENHOR guardará a sua entrada e a sua saída, desde agora e para sempre."
-                    ]
-                },
-                JHN: {
-                    3: [
-                        "Havia um homem entre os fariseus chamado Nicodemos, uma autoridade entre os judeus.",
-                        "Este foi de noite ao encontro de Jesus e lhe disse: Rabi, sabemos que o senhor é um mestre vindo de Deus.",
-                        "Jesus respondeu: Em verdade, em verdade lhe digo que, se alguém não nascer de novo, não pode ver o Reino de Deus.",
-                        "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo o que nele crê não pereça, mas tenha a vida eterna."
                     ]
                 }
             },
@@ -703,75 +740,40 @@
                         "Então Deus disse: Haja luz, e houve luz.",
                         "E Deus viu que a luz era boa, e separou a luz da escuridão.",
                         "Deus chamou a luz de Dia e a escuridão de Noite. A noite passou e veio a manhã, encerrando o primeiro dia."
-                    ],
-                    2: [
-                        "Assim foi concluída a criação dos céus, da terra e de tudo que neles há.",
-                        "No sétimo dia, Deus acabou sua obra de criação e descansou de todo o seu trabalho.",
-                        "Deus abençoou o sétimo dia e o declarou santo, pois foi o dia em que descansou de toda a sua obra de criação.",
-                        "Esse é o relato da criação dos céus e da terra.",
-                        "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
-                    ]
-                },
-                PSA: {
-                    23: [
-                        "O SENHOR é o meu pastor; nada me faltará.",
-                        "Ele me faz descansar em pastos verdes e me conduz a águas tranquilas.",
-                        "Renova as minhas forças e me guia pelos caminhos da justiça por causa do seu nome.",
-                        "Mesmo que eu ande pelo vale de trevas e morte, não temerei perigo algum, pois tu estás comigo; a tua vara e o teu cajado me protegem.",
-                        "Preparas um banquete para mim na presença dos meus inimigos. Unges minha cabeça com óleo; meu cálice transborda.",
-                        "Certamente a bondade e o amor nos acompanharão todos os dias da minha vida, e morarei na casa do SENHOR para sempre."
-                    ],
-                    121: [
-                        "Olho para os montes e me pergunto: de onde virá meu socorro?",
-                        "Meu socorro vem do SENHOR, que fez os céus e a terra!",
-                        "Ele não deixará que você tropece; aquele que o guarda não cochilará.",
-                        "Sim, aquele que guarda Israel não dorme nem cochila!",
-                        "O SENHOR é sua proteção; ele está ao seu lado como sombra protetora.",
-                        "O sol não o machucará de dia, nem a lua, de noite.",
-                        "O SENHOR o guardará de todo mal; ele guardará a sua vida.",
-                        "O SENHOR guardará a sua entrada e a sua saída, desde agora e para sempre."
-                    ]
-                },
-                JHN: {
-                    3: [
-                        "Havia um homem chamado Nicodemos, líder religioso entre os fariseus.",
-                        "Certa noite, ele veio falar com Jesus e disse: Mestre, todos sabemos que Deus enviou o senhor para nos ensinar.",
-                        "Jesus respondeu: Digo a verdade: quem não nascer de novo, não pode ver o Reino de Deus.",
-                        "Porque Deus amou tanto o mundo que deu seu Filho único, para que todo o que nele crer não pereça, mas tenha a vida eterna."
                     ]
                 }
             }
         };
 
-        // HISTÓRIAS CONTADAS & DRAMATIZADAS
         const DRAMA_STORIES = [
             {
                 id: 'creation',
                 title: 'A Criação do Mundo',
                 reference: 'Gênesis 1 - 2',
                 duration: '4 min',
-                desc: 'A majestosa narração sobre a origem do universo e o sopro de vida da humanidade.',
+                desc: 'A majestosa narração sobre a origem do universo e o sopro da vida.',
                 bgImage: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=600'
             },
             {
                 id: 'shepherd',
-                title: 'O Pastor e o Salmo da Confiança',
+                title: 'O Pastor e a Confiança',
                 reference: 'Salmos 23',
                 duration: '3 min',
-                desc: 'Uma reflexão emocionante sobre o cuidado de Deus no vale da sombra da morte.',
+                desc: 'Uma reflexão emocionante sobre o cuidado de Deus no vale da sombra.',
                 bgImage: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=600'
             },
             {
                 id: 'nicodemus',
-                title: 'O Encontro Noturno com Nicodemos',
+                title: 'O Encontro Noturno',
                 reference: 'João 3',
                 duration: '5 min',
-                desc: 'O revelador diálogo sobre o novo nascimento e o amor incondicional de Deus.',
+                desc: 'O revelador diálogo sobre o novo nascimento e o amor incondicional.',
                 bgImage: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600'
             }
         ];
 
         let state = {
+            theme: localStorage.getItem('lumina_theme') || 'dark',
             currentVersion: localStorage.getItem('lumina_version') || 'NVI',
             currentBookId: 'GEN',
             currentChapter: 1,
@@ -789,26 +791,46 @@
         };
 
         let currentUtterance = null;
-        let dramaAudioSynth = null;
 
         window.onload = function() {
-            // Sincronizar Select da Versão no Header
+            // Apply saved theme
+            applyTheme(state.theme);
+
+            // Synchronize Version selector
             document.getElementById('header-version-select').value = state.currentVersion;
             
-            // Renderizar Versículos
+            // Render components
             renderChapter();
-            
-            // Renderizar Lista de Histórias
             renderStories();
-
-            // Carregar Preferências Salvas
             loadSavedBgSettings();
-
-            // PWA Service Worker (Opcional)
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
-            }
         };
+
+        function toggleTheme() {
+            const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+            state.theme = newTheme;
+            localStorage.setItem('lumina_theme', newTheme);
+            applyTheme(newTheme);
+            showToast(`Tema alterado para Modo ${newTheme === 'dark' ? 'Escuro' : 'Claro'}`);
+        }
+
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                if (themeIcon) themeIcon.className = 'fa-solid fa-moon text-sm sm:text-base text-amber-400';
+                if (themeText) themeText.innerText = 'Tema Escuro';
+            } else {
+                html.classList.remove('dark');
+                if (themeIcon) themeIcon.className = 'fa-solid fa-sun text-sm sm:text-base text-amber-500';
+                if (themeText) themeText.innerText = 'Tema Claro';
+            }
+
+            // Sync adaptive overlay contrast
+            updateBgSettings();
+        }
 
         function getBookObj(bookId) {
             return BIBLE_BOOKS.find(b => b.id === bookId) || BIBLE_BOOKS[0];
@@ -818,44 +840,41 @@
             const book = getBookObj(state.currentBookId);
             const version = state.currentVersion;
             
-            // Atualizar Indicadores de Cabeçalho
-            document.getElementById('current-location-text').innerHTML = `${book.name} ${state.currentChapter} <i class="fa-solid fa-chevron-down text-xs text-amber-400"></i>`;
+            document.getElementById('current-location-text').innerHTML = `${book.name} ${state.currentChapter} <i class="fa-solid fa-chevron-down text-xs text-amber-500"></i>`;
             document.getElementById('chapter-title-heading').innerText = `${book.name} ${state.currentChapter}`;
             document.getElementById('version-badge-code').innerText = version;
 
             const container = document.getElementById('verses-container');
             container.innerHTML = '';
 
-            // Obter Versículos da Versão Atual ou Gerar Pura Contingência caso falte algum capítulo específico
             let verses = [];
             if (BIBLE_DATA[version] && BIBLE_DATA[version][state.currentBookId] && BIBLE_DATA[version][state.currentBookId][state.currentChapter]) {
                 verses = BIBLE_DATA[version][state.currentBookId][state.currentChapter];
             } else {
-                // Texto genérico limpo sem NENHUMA explicação ou parentênteses
+                // Fallback scripture verses (100% pure without parenthesis)
                 verses = [
                     "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre.",
                     "Lâmpada para os meus pés é tua palavra e luz, para o meu caminho.",
                     "Tudo posso naquele que me fortalece.",
-                    "O SENHOR é a minha luz e a minha salvação; a quem temerei?"
+                    "O SENHOR é a minha luz e a minha salvação; a quem temerei?",
+                    "Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia."
                 ];
             }
 
-            // Renderização Garantida de Texto Purificado
             verses.forEach((rawText, index) => {
                 const verseNum = index + 1;
-                // SANITIZAÇÃO COMPLETA: Remove qualquer parenteses existente
                 const pureText = cleanScriptureText(rawText);
 
                 const verseKey = `${version}_${state.currentBookId}_${state.currentChapter}_${verseNum}`;
                 const hlColor = state.highlights[verseKey] || '';
 
                 const verseEl = document.createElement('div');
-                verseEl.className = `group p-2.5 rounded-xl transition-all hover:bg-slate-800/40 cursor-pointer flex items-start gap-3 ${hlColor ? 'hl-' + hlColor : ''}`;
+                verseEl.className = `group p-3 rounded-xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-200/40 dark:hover:bg-slate-800/40 ${hlColor ? 'hl-' + hlColor : ''}`;
                 verseEl.onclick = () => openVerseModal(verseNum, pureText);
 
                 verseEl.innerHTML = `
-                    <span class="text-xs font-bold text-amber-400 font-sans mt-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 shrink-0">${verseNum}</span>
-                    <p class="flex-1 text-slate-100" style="font-size: ${state.fontSize}px;">${pureText}</p>
+                    <span class="text-xs font-bold text-amber-600 dark:text-amber-400 font-sans mt-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 shrink-0">${verseNum}</span>
+                    <p class="flex-1 text-slate-800 dark:text-slate-100" style="font-size: ${state.fontSize}px;">${pureText}</p>
                 `;
 
                 container.appendChild(verseEl);
@@ -892,28 +911,37 @@
             document.getElementById('chapters-picker-section').classList.add('hidden');
         }
 
+        function filterBooks(query) {
+            renderBooksGrid(query.trim().toLowerCase());
+        }
+
         function switchTestament(testament) {
             state.testamentTab = testament;
             document.getElementById('tab-ot-btn').className = testament === 'ot' ? 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-400 border-b-2 border-amber-400 bg-slate-800/40" : 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent";
+                "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40" : 
+                "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent";
             document.getElementById('tab-nt-btn').className = testament === 'nt' ? 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-400 border-b-2 border-amber-400 bg-slate-800/40" : 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent";
+                "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40" : 
+                "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent";
             renderBooksGrid();
         }
 
-        function renderBooksGrid() {
+        function renderBooksGrid(filterQuery = '') {
             const grid = document.getElementById('books-grid');
             grid.innerHTML = '';
 
-            const filtered = BIBLE_BOOKS.filter(b => b.testament === state.testamentTab);
+            const filtered = BIBLE_BOOKS.filter(b => {
+                const matchesTestament = b.testament === state.testamentTab;
+                const matchesSearch = filterQuery === '' || b.name.toLowerCase().includes(filterQuery);
+                return filterQuery !== '' ? matchesSearch : (matchesTestament && matchesSearch);
+            });
+
             filtered.forEach(b => {
                 const btn = document.createElement('button');
-                btn.className = `p-3 rounded-xl border text-left transition-all ${b.id === state.currentBookId ? 'bg-amber-500/20 border-amber-500 text-amber-400 font-bold' : 'bg-slate-800/60 border-slate-700/80 hover:bg-slate-700 text-slate-200'}`;
+                btn.className = `p-3 rounded-xl border text-left transition-all ${b.id === state.currentBookId ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'bg-slate-200/60 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'}`;
                 btn.innerHTML = `
                     <div class="text-xs font-bold truncate">${b.name}</div>
-                    <div class="text-[10px] text-slate-400">${b.chapters} caps</div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400">${b.chapters} caps</div>
                 `;
                 btn.onclick = () => selectBookForChapters(b);
                 grid.appendChild(btn);
@@ -929,7 +957,7 @@
             grid.innerHTML = '';
             for (let c = 1; c <= book.chapters; c++) {
                 const btn = document.createElement('button');
-                btn.className = `p-2 rounded-lg bg-slate-800 hover:bg-amber-500 hover:text-slate-950 font-bold text-xs text-center border border-slate-700 transition-all ${c === state.currentChapter ? 'bg-amber-500 text-slate-950' : 'text-slate-200'}`;
+                btn.className = `p-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 font-bold text-xs text-center border border-slate-300 dark:border-slate-700 transition-all ${c === state.currentChapter ? 'bg-amber-500 text-slate-950' : 'text-slate-800 dark:text-slate-200'}`;
                 btn.innerText = c;
                 btn.onclick = () => {
                     state.currentChapter = c;
@@ -967,14 +995,13 @@
             localStorage.setItem('lumina_highlights', JSON.stringify(state.highlights));
             closeVerseModal();
             renderChapter();
-            showToast(color ? "Versículo destacado!" : "Destaque removido.");
+            showToast(color ? "Versículo grifado!" : "Destaque removido.");
         }
 
         function copyCurrentVerse() {
             const book = getBookObj(state.currentBookId);
             const fullStr = `"${state.selectedVerseText}" - ${book.name} ${state.currentChapter}:${state.selectedVerseNum} (${state.currentVersion})`;
             
-            // Fallback de Cópia Compatível
             const textarea = document.createElement('textarea');
             textarea.value = fullStr;
             document.body.appendChild(textarea);
@@ -987,12 +1014,12 @@
         }
 
         function openNoteDrawer() {
-            const noteText = prompt("Adicione sua reflexão pessoal sobre este versículo:", "");
+            const noteText = prompt("Adicione sua anotação pessoal sobre este versículo:", "");
             if (noteText !== null) {
                 const verseKey = `${state.currentBookId}_${state.currentChapter}_${state.selectedVerseNum}`;
                 state.notes[verseKey] = noteText;
                 localStorage.setItem('lumina_notes', JSON.stringify(state.notes));
-                showToast("Nota pessoal salva com sucesso!");
+                showToast("Anotação pessoal salva!");
                 closeVerseModal();
             }
         }
@@ -1006,25 +1033,25 @@
             const ctx = canvas.getContext('2d');
             const book = getBookObj(state.currentBookId);
 
-            // Gradiente de Fundo do Card
+            // Card Gradient Background
             const grad = ctx.createLinearGradient(0, 0, 600, 600);
-            grad.addColorStop(0, '#0f172a');
+            grad.addColorStop(0, '#090d16');
             grad.addColorStop(1, '#1e293b');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, 600, 600);
 
-            // Moldura Dourada
+            // Gold Frame
             ctx.strokeStyle = '#eab308';
             ctx.lineWidth = 4;
-            ctx.strokeRect(30, 30, 540, 540);
+            ctx.strokeRect(28, 28, 544, 544);
 
-            // Ícone Bíblico Símbolo
+            // Cross Icon
             ctx.fillStyle = '#eab308';
             ctx.font = 'bold 36px serif';
             ctx.textAlign = 'center';
             ctx.fillText('✝', 300, 100);
 
-            // Texto do Versículo com Quebra de Linhas
+            // Verse Text Wrapping
             ctx.fillStyle = '#f8fafc';
             ctx.font = 'italic 26px "Cormorant Garamond", Georgia, serif';
             
@@ -1045,12 +1072,12 @@
             }
             ctx.fillText('"' + line.trim() + '"', 300, y);
 
-            // Referência Bíblica
+            // Citation
             ctx.fillStyle = '#eab308';
             ctx.font = 'bold 22px sans-serif';
             ctx.fillText(`${book.name} ${state.currentChapter}:${state.selectedVerseNum} • ${state.currentVersion}`, 300, y + 80);
 
-            // Marca Lumina
+            // Lumina Brand
             ctx.fillStyle = '#94a3b8';
             ctx.font = '14px sans-serif';
             ctx.fillText('Lumina Bíblia • Palavra Sagrada', 300, 530);
@@ -1067,7 +1094,7 @@
             a.href = image;
             a.download = `lumina_versiculo.png`;
             a.click();
-            showToast("Download da imagem iniciado!");
+            showToast("Download da imagem gerado!");
         }
 
         function playCurrentChapter() {
@@ -1081,21 +1108,30 @@
                 verses = ["O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."];
             }
 
-            // Junta e Purifica Texto Sagrado antes de Ler
-            const fullScripture = verses.map(v => cleanScriptureText(v)).join(' ');
+            const fullText = verses.map(v => cleanScriptureText(v)).join(' ');
 
             document.getElementById('player-title').innerText = `${book.name} ${state.currentChapter} (${version})`;
-            document.getElementById('player-subtitle').innerText = "Narração da Palavra";
-            document.getElementById('audio-player-bar').classList.remove('translate-y-32', 'opacity-0');
+            document.getElementById('player-subtitle').innerText = "Narração da Palavra Sagrada";
+            
+            const playerBar = document.getElementById('audio-player-bar');
+            playerBar.classList.remove('translate-y-40', 'opacity-0', 'pointer-events-none');
 
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                currentUtterance = new SpeechSynthesisUtterance(fullScripture);
+                currentUtterance = new SpeechSynthesisUtterance(fullText);
                 currentUtterance.lang = 'pt-BR';
                 currentUtterance.rate = state.audioSpeed;
 
+                currentUtterance.onboundary = function(event) {
+                    if (event.charIndex && fullText.length) {
+                        const pct = Math.min(100, Math.round((event.charIndex / fullText.length) * 100));
+                        document.getElementById('audio-progress-fill').style.width = `${pct}%`;
+                    }
+                };
+
                 currentUtterance.onend = () => {
                     state.isPlayingAudio = false;
+                    document.getElementById('audio-progress-fill').style.width = '100%';
                     document.getElementById('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-play text-xs"></i>`;
                 };
 
@@ -1103,7 +1139,7 @@
                 state.isPlayingAudio = true;
                 document.getElementById('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-pause text-xs"></i>`;
             } else {
-                showToast("Seu navegador não suporta narração por voz.");
+                showToast("Seu dispositivo não suporta narração de áudio.");
             }
         }
 
@@ -1130,7 +1166,8 @@
                 window.speechSynthesis.cancel();
             }
             state.isPlayingAudio = false;
-            document.getElementById('audio-player-bar').classList.add('translate-y-32', 'opacity-0');
+            const playerBar = document.getElementById('audio-player-bar');
+            playerBar.classList.add('translate-y-40', 'opacity-0', 'pointer-events-none');
         }
 
         function changeAudioSpeed(val) {
@@ -1142,8 +1179,8 @@
 
         function toggleDramaMode() {
             state.isDramaMode = !state.isDramaMode;
-            document.getElementById('drama-mode-label').innerText = `Trilha Drama: ${state.isDramaMode ? 'ON' : 'OFF'}`;
-            showToast(state.isDramaMode ? "Modo Drama Ativado com Trilha" : "Modo Narração Normal");
+            document.getElementById('drama-mode-label').innerText = `Drama: ${state.isDramaMode ? 'ON' : 'OFF'}`;
+            showToast(state.isDramaMode ? "Modo Trilha Dramatizada Ativado" : "Modo Narração Direta");
         }
 
         function renderStories() {
@@ -1152,20 +1189,20 @@
 
             DRAMA_STORIES.forEach(story => {
                 const card = document.createElement('div');
-                card.className = "glass-panel rounded-2xl overflow-hidden border border-slate-800 flex flex-col justify-between hover:border-amber-500/50 transition-all group";
+                card.className = "glass-panel rounded-2xl overflow-hidden flex flex-col justify-between hover:border-amber-500/50 transition-all group shadow-md";
                 card.innerHTML = `
                     <div class="h-32 bg-cover bg-center relative" style="background-image: url('${story.bgImage}')">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent"></div>
-                        <span class="absolute top-3 right-3 px-2 py-1 rounded bg-slate-950/80 text-[10px] font-bold text-amber-400 border border-slate-700">${story.duration}</span>
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent opacity-80"></div>
+                        <span class="absolute top-3 right-3 px-2 py-1 rounded-lg bg-slate-950/80 text-[10px] font-bold text-amber-400 border border-slate-700">${story.duration}</span>
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
                         <div>
-                            <h3 class="font-bold text-amber-400 text-base mb-1">${story.title}</h3>
-                            <div class="text-xs font-semibold text-slate-300 mb-2">${story.reference}</div>
-                            <p class="text-xs text-slate-400 leading-relaxed mb-4">${story.desc}</p>
+                            <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base mb-1">${story.title}</h3>
+                            <div class="text-xs font-semibold text-slate-500 dark:text-slate-300 mb-2">${story.reference}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">${story.desc}</p>
                         </div>
-                        <button onclick="playDramaStory('${story.title}', '${story.desc}')" class="w-full bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-400 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                            <i class="fa-solid fa-play"></i> Ouviar História Teatral
+                        <button onclick="playDramaStory('${story.title}', '${story.desc}')" class="w-full bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-amber-600 dark:text-amber-400 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                            <i class="fa-solid fa-play"></i> Ouvir História Dramatizada
                         </button>
                     </div>
                 `;
@@ -1175,8 +1212,10 @@
 
         function playDramaStory(title, desc) {
             document.getElementById('player-title').innerText = title;
-            document.getElementById('player-subtitle').innerText = "História Dramatizada";
-            document.getElementById('audio-player-bar').classList.remove('translate-y-32', 'opacity-0');
+            document.getElementById('player-subtitle').innerText = "História Contada";
+            
+            const playerBar = document.getElementById('audio-player-bar');
+            playerBar.classList.remove('translate-y-40', 'opacity-0', 'pointer-events-none');
 
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -1191,9 +1230,11 @@
             localStorage.setItem('lumina_streak', state.streak.toString());
             document.getElementById('streak-days').innerText = `${state.streak} Dias`;
             document.getElementById('streak-badge').innerText = `🔥 ${state.streak}`;
-            document.getElementById('btn-check-streak').disabled = true;
-            document.getElementById('btn-check-streak').innerText = "Lido Hoje!";
-            showToast("Devocional de hoje concluído!");
+            const btn = document.getElementById('btn-check-streak');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Concluído Hoje!`;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            showToast("Devocional diário marcado com sucesso!");
         }
 
         function shareDailyVerse() {
@@ -1227,7 +1268,13 @@
             document.getElementById('label-blur').innerText = `${blur}px`;
 
             const overlay = document.getElementById('bg-overlay');
-            overlay.style.backgroundColor = `rgba(15, 23, 42, ${opacity / 100})`;
+            const opVal = opacity / 100;
+            
+            if (state.theme === 'dark') {
+                overlay.style.backgroundColor = `rgba(9, 13, 22, ${opVal})`;
+            } else {
+                overlay.style.backgroundColor = `rgba(248, 250, 252, ${opVal})`;
+            }
             overlay.style.backdropFilter = `blur(${blur}px)`;
 
             localStorage.setItem('lumina_bg_opacity', opacity);
@@ -1263,7 +1310,7 @@
             if (savedUrl) {
                 document.getElementById('bg-layer').style.backgroundImage = `url('${savedUrl}')`;
             }
-            const savedOpacity = localStorage.getItem('lumina_bg_opacity') || '80';
+            const savedOpacity = localStorage.getItem('lumina_bg_opacity') || '82';
             const savedBlur = localStorage.getItem('lumina_bg_blur') || '4';
 
             document.getElementById('slider-opacity').value = savedOpacity;
@@ -1271,41 +1318,52 @@
             updateBgSettings();
         }
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('theme-icon');
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-sun text-sm text-amber-500';
-            } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-moon text-sm';
-            }
-        }
-
         function switchTab(tabId) {
             state.activeTab = tabId;
 
-            // Ocultar Todos os Conteúdos
+            // Hide all tab content sections
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // Reset Desktop Nav classes
             document.querySelectorAll('.tab-btn').forEach(el => {
-                el.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all";
+                el.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all";
             });
 
-            // Ativar Conteúdo da Aba Selecionada
+            // Reset Mobile Bottom Nav active colors
+            const mobBtns = ['reader', 'stories', 'devotional'];
+            mobBtns.forEach(id => {
+                const mEl = document.getElementById(`mob-nav-${id}`);
+                if (mEl) {
+                    mEl.className = "flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl";
+                }
+            });
+
+            // Activate target section
             document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
-            activeBtn.className = "tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 whitespace-nowrap bg-amber-500/10 text-amber-400 border border-amber-500/30";
+            
+            // Highlight active Desktop Nav Button
+            const activeDesktopBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeDesktopBtn) {
+                activeDesktopBtn.className = "tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30";
+            }
+
+            // Highlight active Mobile Nav Button
+            const activeMobBtn = document.getElementById(`mob-nav-${tabId}`);
+            if (activeMobBtn) {
+                activeMobBtn.className = "flex flex-col items-center gap-1 text-amber-600 dark:text-amber-400 p-1.5 rounded-xl font-bold";
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-message').innerText = msg;
-            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.remove('translate-y-[-120px]', 'opacity-0');
             
             setTimeout(() => {
-                toast.classList.add('translate-y-[-100px]', 'opacity-0');
-            }, 3000);
+                toast.classList.add('translate-y-[-120px]', 'opacity-0');
+            }, 2800);
         }
     </script>
 </body>
