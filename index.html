@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lumina Bíblia - Palavra Sagrada</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -37,16 +37,15 @@
             }
         }
     </script>
-    
+
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Custom Styles & Adaptive Design -->
+
     <style>
         :root {
             --bg-overlay-color: rgba(9, 13, 22, 0.82);
@@ -107,7 +106,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
 
-        /* Dynamic viewport adjustments for bottom bar */
         .pb-safe-bottom {
             padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
         }
@@ -120,17 +118,47 @@
                 max-height: 85vh;
             }
         }
+
+        /* Barra de progresso de leitura */
+        #read-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 0;
+            z-index: 60; pointer-events: none;
+            background: linear-gradient(90deg, #f59e0b, #fde047);
+            transition: width 0.1s linear;
+        }
+
+        /* Destaque ao saltar para um versículo */
+        .verse-flash { animation: verseFlash 2s ease; }
+        @keyframes verseFlash {
+            0%, 65% { box-shadow: 0 0 0 2px var(--accent-gold); background-color: rgba(250, 204, 21, 0.18); }
+            100%    { box-shadow: 0 0 0 2px transparent; }
+        }
+
+        /* Botões flutuantes laterais (desktop) */
+        .side-nav-btn { transition: all 0.2s ease; }
+        .side-nav-btn:hover { transform: translateY(-50%) scale(1.08); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-amber-500 selection:text-slate-950">
 
+    <!-- Reading progress -->
+    <div id="read-progress"></div>
+
     <!-- Background Image Layer -->
-    <div id="bg-layer" class="fixed inset-0 z-0 bg-cover bg-center transition-all duration-700 pointer-events-none" 
+    <div id="bg-layer" class="fixed inset-0 z-0 bg-cover bg-center transition-all duration-700 pointer-events-none"
          style="background-image: url('https://images.unsplash.com/photo-1507692049790-de58290a4334?q=80&w=2000&auto=format&fit=crop');">
     </div>
 
     <!-- Background Adaptive Contrast Overlay -->
     <div id="bg-overlay" class="fixed inset-0 z-0 transition-all duration-500 pointer-events-none" style="background-color: var(--bg-overlay-color); backdrop-filter: blur(4px);"></div>
+
+    <!-- Botões laterais de capítulo (apenas telas grandes, aba de leitura) -->
+    <button onclick="navigateChapter(-1)" title="Capítulo anterior (←)" class="side-nav-btn hidden lg:flex fixed left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full glass-panel items-center justify-center text-slate-700 dark:text-slate-300 hover:text-amber-500 shadow-lg">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <button onclick="navigateChapter(1)" title="Próximo capítulo (→)" class="side-nav-btn hidden lg:flex fixed right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full glass-panel items-center justify-center text-slate-700 dark:text-slate-300 hover:text-amber-500 shadow-lg">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
 
     <!-- App Container -->
     <div class="relative z-10 flex flex-col min-h-screen max-w-5xl mx-auto w-full px-3 sm:px-6 pb-24 md:pb-8">
@@ -153,9 +181,14 @@
 
             <!-- Header Quick Controls -->
             <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Busca rápida -->
+                <button onclick="openNavigator('books', true)" title="Buscar livro ou referência (Ctrl+K)" class="glass-panel p-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-magnifying-glass text-sm sm:text-base"></i>
+                </button>
+
                 <!-- Bible Version Selector -->
                 <div class="relative">
-                    <select id="header-version-select" onchange="changeVersion(this.value)" class="glass-panel text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm px-2.5 sm:px-3 py-2 rounded-xl focus:outline-none cursor-pointer transition-all">
+                    <select id="header-version-select" onchange="changeVersion(this.value)" class="glass-panel text-amber-600 dark:text-amber-400 font-bold text-xs sm:text-sm px-2.5 sm:px-3 py-2 rounded-xl focus:outline-none cursor-pointer transition-all max-w-[110px] sm:max-w-none">
                         <option value="NVI">NVI - Nova Versão Internacional</option>
                         <option value="ARC">ARC - Almeida Revista e Corrigida</option>
                         <option value="NAA">NAA - Nova Almeida Atualizada</option>
@@ -185,28 +218,51 @@
                 <i class="fa-solid fa-masks-theater"></i> Histórias Contadas
             </button>
             <button id="tab-btn-devotional" onclick="switchTab('devotional')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
-                <i class="fa-solid fa-sun"></i> Devocional Diário
+                <i class="fa-solid fa-sun"></i> Devocional Diário (365)
                 <span id="streak-badge" class="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px]">🔥 3</span>
             </button>
         </nav>
 
         <!-- TAB 1: BIBLE READER -->
         <section id="tab-content-reader" class="tab-content flex-1 flex flex-col py-3">
-            
-            <!-- Book & Chapter Selector Bar -->
-            <div class="glass-panel p-3 sm:p-4 rounded-2xl mb-4 flex flex-wrap items-center justify-between gap-3 shadow-lg">
-                <button onclick="openBookModal()" class="flex items-center gap-3 bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 px-4 py-2.5 rounded-xl transition-all text-left border border-slate-300/50 dark:border-slate-700/50">
-                    <i class="fa-solid fa-list-ul text-amber-600 dark:text-amber-400 text-base"></i>
-                    <div>
-                        <div class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Livro e Capítulo</div>
-                        <div id="current-location-text" class="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                            Gênesis 1 <i class="fa-solid fa-chevron-down text-xs text-amber-500"></i>
-                        </div>
-                    </div>
-                </button>
 
-                <!-- Active Version Badge & Listen Button -->
+            <!-- Barra de localização: ‹ Livro  Capítulo › -->
+            <div class="glass-panel p-3 sm:p-4 rounded-2xl mb-4 flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div class="flex items-center gap-2">
+                    <button onclick="navigateChapter(-1)" title="Capítulo anterior (←)" class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all border border-slate-300/50 dark:border-slate-700/50 shrink-0">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+
+                    <button onclick="openNavigator('books')" title="Escolher livro (Ctrl+K)" class="flex items-center gap-2.5 bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-xl transition-all text-left border border-slate-300/50 dark:border-slate-700/50">
+                        <i class="fa-solid fa-list-ul text-amber-600 dark:text-amber-400 text-sm"></i>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider leading-tight">Livro</div>
+                            <div id="current-book-text" class="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">Gênesis</div>
+                        </div>
+                    </button>
+
+                    <button onclick="openNavigator('chapters')" title="Escolher capítulo" class="flex items-center gap-2.5 bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 px-3 sm:px-4 py-2 rounded-xl transition-all text-left border border-slate-300/50 dark:border-slate-700/50">
+                        <i class="fa-solid fa-hashtag text-amber-600 dark:text-amber-400 text-sm"></i>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider leading-tight">Capítulo</div>
+                            <div class="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-tight flex items-center gap-1">
+                                <span id="current-chapter-text">1</span>
+                                <span id="current-chapter-total" class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">/ 50</span>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="navigateChapter(1)" title="Próximo capítulo (→)" class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all border border-slate-300/50 dark:border-slate-700/50 shrink-0">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Favorito, versão & ouvir -->
+                <div class="flex items-center gap-2">
+                    <button id="btn-fav" onclick="toggleFavorite()" title="Favoritar este capítulo" class="w-10 h-10 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all border border-slate-300/50 dark:border-slate-700/50">
+                        <i id="fav-icon" class="fa-regular fa-star text-sm"></i>
+                    </button>
+
                     <span id="version-badge" class="px-3 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5">
                         <i class="fa-solid fa-check text-[10px]"></i>
                         <span id="version-badge-code">NVI</span>
@@ -218,8 +274,8 @@
                 </div>
             </div>
 
-            <!-- Reading Panel Container (Centered Width for optimal desktop legibility) -->
-            <div class="w-full max-w-3xl mx-auto glass-panel p-4 sm:p-8 rounded-2xl shadow-xl flex-1 mb-6 relative">
+            <!-- Reading Panel Container -->
+            <div id="reading-panel" class="w-full max-w-3xl mx-auto glass-panel p-4 sm:p-8 rounded-2xl shadow-xl flex-1 mb-6 relative">
                 <!-- Chapter Top Navigation Header -->
                 <div class="flex items-center justify-between border-b border-slate-300/40 dark:border-slate-700/50 pb-4 mb-6">
                     <button onclick="navigateChapter(-1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
@@ -233,23 +289,37 @@
                     </button>
                 </div>
 
-                <!-- Verses List -->
-                <div id="verses-container" class="space-y-4 font-scripture leading-relaxed">
-                    <!-- Verses dynamically rendered without parenthesis -->
+                <!-- Aviso quando o texto não veio da API -->
+                <div id="offline-notice" class="hidden mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-300 font-semibold flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <span id="offline-notice-text"></span>
                 </div>
+
+                <!-- Loading Spinner for API Fetching -->
+                <div id="loading-spinner" class="hidden flex flex-col items-center justify-center py-12 gap-3">
+                    <i class="fa-solid fa-circle-notch fa-spin text-amber-500 text-3xl"></i>
+                    <span class="text-xs text-slate-400 font-semibold">Carregando Texto Sagrado...</span>
+                </div>
+
+                <!-- Verses List -->
+                <div id="verses-container" class="space-y-4 font-scripture leading-relaxed"></div>
 
                 <!-- Bottom Chapter Navigation -->
                 <div class="flex items-center justify-between border-t border-slate-300/40 dark:border-slate-700/50 pt-6 mt-8">
                     <button onclick="navigateChapter(-1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors">
                         <i class="fa-solid fa-arrow-left"></i> Anterior
                     </button>
-                    <button onclick="openBookModal()" class="text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline">
+                    <button onclick="openNavigator('chapters')" class="text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline">
                         Trocar Capítulo
                     </button>
                     <button onclick="navigateChapter(1)" class="text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 text-xs sm:text-sm font-bold flex items-center gap-2 transition-colors">
                         Próximo <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
+
+                <p class="hidden sm:block text-center text-[10px] text-slate-500 dark:text-slate-500 mt-5">
+                    Atalhos: ← → mudam de capítulo • Ctrl+K busca livro ou referência (ex: Jo 3:16)
+                </p>
             </div>
         </section>
 
@@ -260,54 +330,95 @@
                 <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Ouça passagens marcantes da Bíblia com imersão narrativa e trilha inspiradora.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="stories-grid">
-                <!-- Story Cards injected via JS -->
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="stories-grid"></div>
         </section>
 
-        <!-- TAB 3: DEVOCIONAL DIÁRIO -->
+        <!-- TAB 3: DEVOCIONAL DIÁRIO 365 DIAS -->
         <section id="tab-content-devotional" class="tab-content hidden flex-1 py-4 space-y-6">
-            <!-- Daily Verse Card -->
-            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden bg-gradient-to-br from-amber-500/10 to-transparent">
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-xs uppercase tracking-widest font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                        <i class="fa-solid fa-star"></i> Versículo do Dia
-                    </span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium" id="devotional-date">Hoje</span>
+
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-lg shrink-0">
+                        <i class="fa-solid fa-calendar-day"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            Plano Devocional Anual
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">365 Dias</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Jornada diária de fé, meditação e fortalecimento espiritual</p>
+                    </div>
                 </div>
-                <blockquote id="daily-verse-text" class="font-scripture text-xl sm:text-2xl italic text-slate-900 dark:text-slate-100 mb-4 leading-relaxed">
-                    "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
-                </blockquote>
-                <div class="flex items-center justify-between">
-                    <span id="daily-verse-ref" class="font-bold text-amber-600 dark:text-amber-400 text-sm sm:text-base">Salmos 121:8</span>
-                    <button onclick="shareDailyVerse()" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2 transition-all">
-                        <i class="fa-solid fa-share-nodes"></i> Compartilhar
+
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-between">
+                    <button onclick="navigateDevotionalDay(-1)" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+
+                    <div class="flex items-center gap-2 bg-slate-200/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-300/50 dark:border-slate-700/50">
+                        <span class="text-xs font-bold text-amber-600 dark:text-amber-400">Dia</span>
+                        <input type="number" id="devotional-day-input" min="1" max="365" value="1" onchange="jumpToDevotionalDay(parseInt(this.value))" class="w-12 bg-transparent text-center font-extrabold text-sm text-slate-900 dark:text-slate-100 focus:outline-none">
+                        <span class="text-xs text-slate-500 dark:text-slate-400">/ 365</span>
+                    </div>
+
+                    <button onclick="navigateDevotionalDay(1)" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Guided Prayer and Streak Grid -->
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-transparent to-transparent shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs uppercase tracking-widest font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-star"></i> Palavra Sagrada do Dia
+                    </span>
+                    <span class="text-xs font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20" id="devotional-day-badge">Dia 1 de 365</span>
+                </div>
+                <blockquote id="daily-verse-text" class="font-scripture text-xl sm:text-2xl italic text-slate-900 dark:text-slate-100 mb-4 leading-relaxed">
+                    "No princípio criou Deus os céus e a terra."
+                </blockquote>
+                <div class="flex items-center justify-between">
+                    <span id="daily-verse-ref" class="font-bold text-amber-600 dark:text-amber-400 text-sm sm:text-base">Gênesis 1:1</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openDailyVerseInReader()" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-book-open"></i> Ler capítulo
+                        </button>
+                        <button onclick="shareDailyVerse()" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-share-nodes"></i> Compartilhar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass-panel p-5 rounded-2xl space-y-2">
-                    <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-hands-praying"></i> Oração Guiada
+                <div class="glass-panel p-5 rounded-2xl space-y-3">
+                    <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-hands-praying"></i> Oração & Reflexão Guiada
                     </h3>
-                    <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                    <p id="daily-guided-prayer" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
                         "Senhor Deus, guia meus passos no dia de hoje. Que Tua palavra pura seja lâmpada para os meus pés e luz para o meu caminho. Conceda-me sabedoria, paz e proteção em cada decisão. Amém."
                     </p>
                 </div>
 
                 <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between space-y-3">
                     <div>
-                        <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base mb-1 flex items-center gap-2">
-                            <i class="fa-solid fa-fire"></i> Sua Sequência Diária
-                        </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Mantenha seu hábito de estudo bíblico ativo todos os dias.</p>
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-bold text-amber-600 dark:text-amber-400 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-fire"></i> Progresso no Plano
+                            </h3>
+                            <span id="devotional-completed-count" class="text-xs font-bold text-slate-500 dark:text-slate-400">0 / 365 dias</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Mantenha a chama da leitura diária sempre acesa.</p>
+
+                        <div class="w-full bg-slate-300 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                            <div id="devotional-progress-bar" class="bg-gradient-to-r from-amber-500 to-amber-400 h-full w-0 transition-all duration-500"></div>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <div class="text-3xl font-extrabold text-amber-600 dark:text-amber-400" id="streak-days">3 Dias</div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div class="text-2xl font-extrabold text-amber-600 dark:text-amber-400" id="streak-days">3 Dias</div>
                         <button onclick="registerDevotionalRead()" id="btn-check-streak" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1.5">
-                            <i class="fa-solid fa-check"></i> Marcar Lido Hoje
+                            <i class="fa-solid fa-check"></i> Marcar Dia Concluído
                         </button>
                     </div>
                 </div>
@@ -316,7 +427,7 @@
 
     </div> <!-- End Main App Container -->
 
-    <!-- FLOATING AUDIO PLAYER (Responsive Positioned above Mobile Bottom Nav) -->
+    <!-- FLOATING AUDIO PLAYER -->
     <div id="audio-player-bar" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-xl glass-panel rounded-2xl p-3 sm:p-4 shadow-2xl transition-all duration-300 transform translate-y-40 opacity-0 pointer-events-none">
         <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between">
@@ -330,18 +441,15 @@
                     </div>
                 </div>
 
-                <!-- Drama Mode Toggle -->
                 <button id="btn-drama-toggle" onclick="toggleDramaMode()" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 text-[10px] font-bold border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition-colors">
                     <i class="fa-solid fa-music"></i> <span id="drama-mode-label">Drama: OFF</span>
                 </button>
 
-                <!-- Close Audio Button -->
                 <button onclick="stopAudio()" class="text-slate-400 hover:text-rose-500 text-base p-1.5 ml-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Audio Controls -->
             <div class="flex items-center gap-3 mt-1">
                 <button onclick="toggleAudioPlayPause()" id="btn-audio-play-pause" class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center shrink-0 hover:scale-105 transition-all shadow">
                     <i class="fa-solid fa-pause text-xs"></i>
@@ -363,7 +471,7 @@
         </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION BAR (Thumb Ergonomic for Mobile Users) -->
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-slate-300/40 dark:border-slate-700/50 px-2 py-2 flex items-center justify-around shadow-2xl">
         <button onclick="switchTab('reader')" id="mob-nav-reader" class="flex flex-col items-center gap-1 text-amber-600 dark:text-amber-400 p-1.5 rounded-xl">
             <i class="fa-solid fa-book-open text-lg"></i>
@@ -377,7 +485,7 @@
             <i class="fa-solid fa-sun text-lg"></i>
             <span class="text-[10px] font-bold">Devocional</span>
         </button>
-        <button onclick="openBookModal()" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl">
+        <button onclick="openNavigator('books')" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl">
             <i class="fa-solid fa-list-ul text-lg"></i>
             <span class="text-[10px] font-bold">Livros</span>
         </button>
@@ -387,45 +495,74 @@
         </button>
     </nav>
 
-    <!-- MODAL 1: BIBLE BOOKS & CHAPTERS SELECTOR -->
-    <div id="modal-books" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-        <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-3xl rounded-t-3xl sm:rounded-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden mobile-bottom-sheet">
-            <div class="p-4 border-b border-slate-300/50 dark:border-slate-800 flex items-center justify-between">
-                <h3 class="font-bold text-amber-600 dark:text-amber-400 text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-book-bible"></i> Selecionar Livro & Capítulo
+    <!-- MODAL 1: NAVEGADOR DE LIVROS E CAPÍTULOS -->
+    <div id="modal-books" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden" onclick="if (event.target === this) closeBookModal()">
+        <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-3xl rounded-t-3xl sm:rounded-2xl h-[85vh] sm:h-[80vh] flex flex-col shadow-2xl overflow-hidden mobile-bottom-sheet">
+
+            <div class="p-4 border-b border-slate-300/50 dark:border-slate-800 flex items-center justify-between shrink-0">
+                <h3 id="nav-title" class="font-bold text-amber-600 dark:text-amber-400 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-book-bible"></i> Livros da Bíblia
                 </h3>
-                <button onclick="closeBookModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 p-2">
+                <button onclick="closeBookModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 p-2" title="Fechar (Esc)">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <!-- Search Book Bar -->
-            <div class="p-3 border-b border-slate-300/40 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/50">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="book-search-input" oninput="filterBooks(this.value)" placeholder="Buscar livro (ex: Salmos, João, Gênesis)..." class="w-full bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 pl-9 pr-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-medium focus:outline-none focus:border-amber-500">
+            <!-- VISTA 1: LIVROS -->
+            <div id="nav-view-books" class="flex flex-col flex-1 min-h-0">
+                <div class="p-3 border-b border-slate-300/40 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/50 shrink-0">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="book-search-input" oninput="renderBooks()" onkeydown="handleSearchKey(event)" autocomplete="off" autocapitalize="off" spellcheck="false"
+                               placeholder="Livro ou referência: Salmos, 1 co 13, Jo 3:16..."
+                               class="w-full bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 pl-9 pr-9 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-amber-500">
+                        <button id="search-clear-btn" onclick="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1" style="display:none;">
+                            <i class="fa-solid fa-circle-xmark text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="testament-tabs" class="flex border-b border-slate-300/50 dark:border-slate-800 shrink-0">
+                    <button onclick="switchTestament('ot')" id="tab-ot-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40">
+                        Antigo Testamento (39)
+                    </button>
+                    <button onclick="switchTestament('nt')" id="tab-nt-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent">
+                        Novo Testamento (27)
+                    </button>
+                </div>
+
+                <div id="books-scroll" class="p-4 overflow-y-auto flex-1 space-y-4">
+                    <div id="goto-suggestion" style="display:none;"></div>
+                    <div id="recents-section" class="space-y-3" style="display:none;"></div>
+                    <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"></div>
                 </div>
             </div>
 
-            <!-- OT / NT Testament Tabs -->
-            <div class="flex border-b border-slate-300/50 dark:border-slate-800">
-                <button onclick="switchTestament('ot')" id="tab-ot-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40">
-                    Antigo Testamento (39)
-                </button>
-                <button onclick="switchTestament('nt')" id="tab-nt-btn" class="flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent">
-                    Novo Testamento (27)
-                </button>
-            </div>
-
-            <!-- Books & Chapters Content Grid -->
-            <div class="p-4 overflow-y-auto flex-1 space-y-4">
-                <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    <!-- Dynamic Books Grid -->
+            <!-- VISTA 2: CAPÍTULOS -->
+            <div id="nav-view-chapters" class="flex-col flex-1 min-h-0" style="display:none;">
+                <div class="p-3 border-b border-slate-300/50 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
+                    <button onclick="showBooks()" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-arrow-left"></i> Livros
+                    </button>
+                    <div class="text-center min-w-0">
+                        <div id="chapters-book-name" class="font-bold text-slate-900 dark:text-slate-100 text-base truncate">Gênesis</div>
+                        <div id="chapters-book-meta" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">50 capítulos</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-prev-book" onclick="stepBook(-1)" class="px-2.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold flex items-center gap-1.5 transition-all max-w-[110px]">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i><span id="prev-book-label" class="truncate hidden sm:inline">Anterior</span>
+                        </button>
+                        <button id="btn-next-book" onclick="stepBook(1)" class="px-2.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold flex items-center gap-1.5 transition-all max-w-[110px]">
+                            <span id="next-book-label" class="truncate hidden sm:inline">Próximo</span><i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div id="chapters-picker-section" class="hidden border-t border-slate-300/50 dark:border-slate-800 pt-4 mt-4">
-                    <h4 id="selected-book-name-title" class="font-bold text-amber-600 dark:text-amber-400 text-sm mb-3">Selecione o Capítulo:</h4>
-                    <div id="chapters-grid" class="grid grid-cols-6 sm:grid-cols-10 gap-2"></div>
+                <div class="p-4 overflow-y-auto flex-1">
+                    <div id="chapters-grid" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2"></div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-4 flex items-center gap-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span> Capítulo favoritado
+                    </p>
                 </div>
             </div>
         </div>
@@ -443,7 +580,6 @@
                 </button>
             </div>
 
-            <!-- Theme Switch Quick Button in Modal -->
             <div class="flex items-center justify-between bg-slate-200/70 dark:bg-slate-800/70 p-3 rounded-xl">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-circle-half-stroke text-amber-500"></i>
@@ -454,7 +590,6 @@
                 </button>
             </div>
 
-            <!-- Sliders for Opacity, Blur, Font Size -->
             <div class="space-y-4">
                 <div>
                     <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -481,13 +616,11 @@
                 </div>
             </div>
 
-            <!-- Custom User Image Upload -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Enviar Foto Própria:</label>
                 <input type="file" id="user-bg-file" accept="image/*" onchange="handleUserBgUpload(event)" class="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/20 file:text-amber-600 dark:file:text-amber-400 hover:file:bg-amber-500/30 cursor-pointer">
             </div>
 
-            <!-- Background Preset Images -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Galeria de Imagens:</label>
                 <div class="grid grid-cols-4 gap-2">
@@ -500,7 +633,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: VERSE ACTION SHEET (Highlight, Copy, Notes, Card Generator) -->
+    <!-- MODAL 3: VERSE ACTION SHEET -->
     <div id="modal-verse-action" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
         <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4 mobile-bottom-sheet">
             <div class="flex items-center justify-between border-b border-slate-300/50 dark:border-slate-800 pb-2">
@@ -510,12 +643,10 @@
                 </button>
             </div>
 
-            <!-- Verse Preview Box -->
             <p id="verse-action-text" class="text-slate-800 dark:text-slate-200 font-scripture italic text-base sm:text-lg leading-relaxed bg-slate-200/50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-300/40 dark:border-slate-800">
                 ""
             </p>
 
-            <!-- Highlight Palette -->
             <div>
                 <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">Grifar Versículo:</label>
                 <div class="flex items-center gap-3">
@@ -527,7 +658,6 @@
                 </div>
             </div>
 
-            <!-- Quick Action Grid Buttons -->
             <div class="grid grid-cols-3 gap-2.5 pt-2">
                 <button onclick="copyCurrentVerse()" class="p-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex flex-col items-center gap-2 transition-all">
                     <i class="fa-solid fa-copy text-amber-500 text-base"></i> Copiar
@@ -542,7 +672,7 @@
         </div>
     </div>
 
-    <!-- MODAL 4: VERSE CARD GENERATOR FOR SOCIAL MEDIA -->
+    <!-- MODAL 4: VERSE CARD GENERATOR -->
     <div id="modal-card-generator" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
         <div class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col gap-4 mobile-bottom-sheet">
             <div class="flex items-center justify-between border-b border-slate-300/50 dark:border-slate-800 pb-2">
@@ -554,12 +684,10 @@
                 </button>
             </div>
 
-            <!-- Canvas Container -->
             <div class="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl border border-slate-300 dark:border-slate-700 flex items-center justify-center bg-slate-950">
                 <canvas id="verse-card-canvas" width="600" height="600" class="w-full h-full object-contain"></canvas>
             </div>
 
-            <!-- Download Button -->
             <button onclick="downloadVerseCard()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm active:scale-95">
                 <i class="fa-solid fa-download"></i> Baixar Imagem para Compartilhar
             </button>
@@ -567,182 +695,149 @@
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed top-5 right-5 z-50 bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-[-120px] opacity-0 flex items-center gap-2.5">
+    <div id="toast" class="fixed top-5 right-5 z-[70] bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-[-120px] opacity-0 flex items-center gap-2.5">
         <i class="fa-solid fa-circle-check text-sm"></i> <span id="toast-message">Notificação</span>
     </div>
 
     <script>
-        
-        // SANITIZADOR RIGOROSO DE TEXTO BÍBLICO (Remove absolutamente qualquer texto entre parênteses)
+        const $ = (id) => document.getElementById(id);
+
+        // SANITIZADOR RIGOROSO DE TEXTO BÍBLICO (Remove texto entre parênteses)
         function cleanScriptureText(text) {
             if (!text) return '';
-            // Substitui todas as ocorrências de (...) e reduz espaços duplos
             return text.replace(/\s*\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim();
         }
 
-        // BIBLE BOOKS DATA (39 Old Testament + 27 New Testament)
+        // BIBLE BOOKS DATA - EXACTLY 66 BOOKS WITH PRECISE CHAPTER COUNTS
         const BIBLE_BOOKS = [
             // Antigo Testamento (39)
-            { id: 'GEN', name: 'Gênesis', testament: 'ot', chapters: 50 },
-            { id: 'EXO', name: 'Êxodo', testament: 'ot', chapters: 40 },
-            { id: 'LEV', name: 'Levítico', testament: 'ot', chapters: 27 },
-            { id: 'NUM', name: 'Números', testament: 'ot', chapters: 36 },
-            { id: 'DEU', name: 'Deuteronômio', testament: 'ot', chapters: 34 },
-            { id: 'JOS', name: 'Josué', testament: 'ot', chapters: 24 },
-            { id: 'JDG', name: 'Juízes', testament: 'ot', chapters: 21 },
-            { id: 'RUT', name: 'Rute', testament: 'ot', chapters: 4 },
-            { id: '1SAM', name: '1 Samuel', testament: 'ot', chapters: 31 },
-            { id: '2SAM', name: '2 Samuel', testament: 'ot', chapters: 24 },
-            { id: '1KIN', name: '1 Reis', testament: 'ot', chapters: 22 },
-            { id: '2KIN', name: '2 Reis', testament: 'ot', chapters: 25 },
-            { id: '1CHR', name: '1 Crônicas', testament: 'ot', chapters: 29 },
-            { id: '2CHR', name: '2 Crônicas', testament: 'ot', chapters: 36 },
-            { id: 'EZR', name: 'Esdras', testament: 'ot', chapters: 10 },
-            { id: 'NEH', name: 'Neemias', testament: 'ot', chapters: 13 },
-            { id: 'EST', name: 'Ester', testament: 'ot', chapters: 10 },
-            { id: 'JOB', name: 'Jó', testament: 'ot', chapters: 42 },
-            { id: 'PSA', name: 'Salmos', testament: 'ot', chapters: 150 },
-            { id: 'PRO', name: 'Provérbios', testament: 'ot', chapters: 31 },
-            { id: 'ECC', name: 'Eclesiastes', testament: 'ot', chapters: 12 },
-            { id: 'SNG', name: 'Cânticos', testament: 'ot', chapters: 8 },
-            { id: 'ISA', name: 'Isaías', testament: 'ot', chapters: 66 },
-            { id: 'JER', name: 'Jeremias', testament: 'ot', chapters: 52 },
-            { id: 'LAM', name: 'Lamentações', testament: 'ot', chapters: 5 },
-            { id: 'EZK', name: 'Ezequiel', testament: 'ot', chapters: 48 },
-            { id: 'DAN', name: 'Daniel', testament: 'ot', chapters: 12 },
-            { id: 'HOS', name: 'Oséias', testament: 'ot', chapters: 14 },
-            { id: 'JOL', name: 'Joel', testament: 'ot', chapters: 3 },
-            { id: 'AMO', name: 'Amós', testament: 'ot', chapters: 9 },
-            { id: 'OBA', name: 'Obadias', testament: 'ot', chapters: 1 },
-            { id: 'JON', name: 'Jonas', testament: 'ot', chapters: 4 },
-            { id: 'MIC', name: 'Miquéias', testament: 'ot', chapters: 7 },
-            { id: 'NAM', name: 'Naum', testament: 'ot', chapters: 3 },
-            { id: 'HAB', name: 'Habacuque', testament: 'ot', chapters: 3 },
-            { id: 'ZEP', name: 'Sofonias', testament: 'ot', chapters: 3 },
-            { id: 'HAG', name: 'Ageu', testament: 'ot', chapters: 2 },
-            { id: 'ZEC', name: 'Zacarias', testament: 'ot', chapters: 14 },
-            { id: 'MAL', name: 'Malaquias', testament: 'ot', chapters: 4 },
+            { id: 'GEN', name: 'Gênesis', englishName: 'Genesis', testament: 'ot', chapters: 50, category: 'Torá' },
+            { id: 'EXO', name: 'Êxodo', englishName: 'Exodus', testament: 'ot', chapters: 40, category: 'Torá' },
+            { id: 'LEV', name: 'Levítico', englishName: 'Leviticus', testament: 'ot', chapters: 27, category: 'Torá' },
+            { id: 'NUM', name: 'Números', englishName: 'Numbers', testament: 'ot', chapters: 36, category: 'Torá' },
+            { id: 'DEU', name: 'Deuteronômio', englishName: 'Deuteronomy', testament: 'ot', chapters: 34, category: 'Torá' },
+            { id: 'JOS', name: 'Josué', englishName: 'Joshua', testament: 'ot', chapters: 24, category: 'História' },
+            { id: 'JDG', name: 'Juízes', englishName: 'Judges', testament: 'ot', chapters: 21, category: 'História' },
+            { id: 'RUT', name: 'Rute', englishName: 'Ruth', testament: 'ot', chapters: 4, category: 'História' },
+            { id: '1SAM', name: '1 Samuel', englishName: '1 Samuel', testament: 'ot', chapters: 31, category: 'História' },
+            { id: '2SAM', name: '2 Samuel', englishName: '2 Samuel', testament: 'ot', chapters: 24, category: 'História' },
+            { id: '1KIN', name: '1 Reis', englishName: '1 Kings', testament: 'ot', chapters: 22, category: 'História' },
+            { id: '2KIN', name: '2 Reis', englishName: '2 Kings', testament: 'ot', chapters: 25, category: 'História' },
+            { id: '1CHR', name: '1 Crônicas', englishName: '1 Chronicles', testament: 'ot', chapters: 29, category: 'História' },
+            { id: '2CHR', name: '2 Crônicas', englishName: '2 Chronicles', testament: 'ot', chapters: 36, category: 'História' },
+            { id: 'EZR', name: 'Esdras', englishName: 'Ezra', testament: 'ot', chapters: 10, category: 'História' },
+            { id: 'NEH', name: 'Neemias', englishName: 'Nehemiah', testament: 'ot', chapters: 13, category: 'História' },
+            { id: 'EST', name: 'Ester', englishName: 'Esther', testament: 'ot', chapters: 10, category: 'História' },
+            { id: 'JOB', name: 'Jó', englishName: 'Job', testament: 'ot', chapters: 42, category: 'Poesia' },
+            { id: 'PSA', name: 'Salmos', englishName: 'Psalms', testament: 'ot', chapters: 150, category: 'Poesia' },
+            { id: 'PRO', name: 'Provérbios', englishName: 'Proverbs', testament: 'ot', chapters: 31, category: 'Poesia' },
+            { id: 'ECC', name: 'Eclesiastes', englishName: 'Ecclesiastes', testament: 'ot', chapters: 12, category: 'Poesia' },
+            { id: 'SNG', name: 'Cânticos', englishName: 'Song of Solomon', testament: 'ot', chapters: 8, category: 'Poesia' },
+            { id: 'ISA', name: 'Isaías', englishName: 'Isaiah', testament: 'ot', chapters: 66, category: 'Profetas' },
+            { id: 'JER', name: 'Jeremias', englishName: 'Jeremiah', testament: 'ot', chapters: 52, category: 'Profetas' },
+            { id: 'LAM', name: 'Lamentações', englishName: 'Lamentations', testament: 'ot', chapters: 5, category: 'Profetas' },
+            { id: 'EZK', name: 'Ezequiel', englishName: 'Ezekiel', testament: 'ot', chapters: 48, category: 'Profetas' },
+            { id: 'DAN', name: 'Daniel', englishName: 'Daniel', testament: 'ot', chapters: 12, category: 'Profetas' },
+            { id: 'HOS', name: 'Oséias', englishName: 'Hosea', testament: 'ot', chapters: 14, category: 'Profetas' },
+            { id: 'JOL', name: 'Joel', englishName: 'Joel', testament: 'ot', chapters: 3, category: 'Profetas' },
+            { id: 'AMO', name: 'Amós', englishName: 'Amos', testament: 'ot', chapters: 9, category: 'Profetas' },
+            { id: 'OBA', name: 'Obadias', englishName: 'Obadiah', testament: 'ot', chapters: 1, category: 'Profetas' },
+            { id: 'JON', name: 'Jonas', englishName: 'Jonah', testament: 'ot', chapters: 4, category: 'Profetas' },
+            { id: 'MIC', name: 'Miquéias', englishName: 'Micah', testament: 'ot', chapters: 7, category: 'Profetas' },
+            { id: 'NAM', name: 'Naum', englishName: 'Nahum', testament: 'ot', chapters: 3, category: 'Profetas' },
+            { id: 'HAB', name: 'Habacuque', englishName: 'Habakkuk', testament: 'ot', chapters: 3, category: 'Profetas' },
+            { id: 'ZEP', name: 'Sofonias', englishName: 'Zephaniah', testament: 'ot', chapters: 3, category: 'Profetas' },
+            { id: 'HAG', name: 'Ageu', englishName: 'Haggai', testament: 'ot', chapters: 2, category: 'Profetas' },
+            { id: 'ZEC', name: 'Zacarias', englishName: 'Zechariah', testament: 'ot', chapters: 14, category: 'Profetas' },
+            { id: 'MAL', name: 'Malaquias', englishName: 'Malachi', testament: 'ot', chapters: 4, category: 'Profetas' },
 
             // Novo Testamento (27)
-            { id: 'MAT', name: 'Mateus', testament: 'nt', chapters: 28 },
-            { id: 'MRK', name: 'Marcos', testament: 'nt', chapters: 16 },
-            { id: 'LUK', name: 'Lucas', testament: 'nt', chapters: 24 },
-            { id: 'JHN', name: 'João', testament: 'nt', chapters: 21 },
-            { id: 'ACT', name: 'Atos', testament: 'nt', chapters: 28 },
-            { id: 'ROM', name: 'Romanos', testament: 'nt', chapters: 16 },
-            { id: '1COR', name: '1 Coríntios', testament: 'nt', chapters: 16 },
-            { id: '2COR', name: '2 Coríntios', testament: 'nt', chapters: 13 },
-            { id: 'GAL', name: 'Gálatas', testament: 'nt', chapters: 6 },
-            { id: 'EPH', name: 'Efésios', testament: 'nt', chapters: 6 },
-            { id: 'PHP', name: 'Filipenses', testament: 'nt', chapters: 4 },
-            { id: 'COL', name: 'Colossenses', testament: 'nt', chapters: 4 },
-            { id: '1TH', name: '1 Tessalonicenses', testament: 'nt', chapters: 5 },
-            { id: '2TH', name: '2 Tessalonicenses', testament: 'nt', chapters: 3 },
-            { id: '1TI', name: '1 Timóteo', testament: 'nt', chapters: 6 },
-            { id: '2TI', name: '2 Timóteo', testament: 'nt', chapters: 4 },
-            { id: 'TIT', name: 'Tito', testament: 'nt', chapters: 3 },
-            { id: 'PHM', name: 'Filemom', testament: 'nt', chapters: 1 },
-            { id: 'HEB', name: 'Hebreus', testament: 'nt', chapters: 13 },
-            { id: 'JAS', name: 'Tiago', testament: 'nt', chapters: 5 },
-            { id: '1PET', name: '1 Pedro', testament: 'nt', chapters: 5 },
-            { id: '2PET', name: '2 Pedro', testament: 'nt', chapters: 3 },
-            { id: '1JHN', name: '1 João', testament: 'nt', chapters: 5 },
-            { id: '2JHN', name: '2 João', testament: 'nt', chapters: 1 },
-            { id: '3JHN', name: '3 João', testament: 'nt', chapters: 1 },
-            { id: 'JUD', name: 'Judas', testament: 'nt', chapters: 1 },
-            { id: 'REV', name: 'Apocalipse', testament: 'nt', chapters: 22 }
+            { id: 'MAT', name: 'Mateus', englishName: 'Matthew', testament: 'nt', chapters: 28, category: 'Evangelhos' },
+            { id: 'MRK', name: 'Marcos', englishName: 'Mark', testament: 'nt', chapters: 16, category: 'Evangelhos' },
+            { id: 'LUK', name: 'Lucas', englishName: 'Luke', testament: 'nt', chapters: 24, category: 'Evangelhos' },
+            { id: 'JHN', name: 'João', englishName: 'John', testament: 'nt', chapters: 21, category: 'Evangelhos' },
+            { id: 'ACT', name: 'Atos', englishName: 'Acts', testament: 'nt', chapters: 28, category: 'História' },
+            { id: 'ROM', name: 'Romanos', englishName: 'Romans', testament: 'nt', chapters: 16, category: 'Cartas' },
+            { id: '1COR', name: '1 Coríntios', englishName: '1 Corinthians', testament: 'nt', chapters: 16, category: 'Cartas' },
+            { id: '2COR', name: '2 Coríntios', englishName: '2 Corinthians', testament: 'nt', chapters: 13, category: 'Cartas' },
+            { id: 'GAL', name: 'Gálatas', englishName: 'Galatians', testament: 'nt', chapters: 6, category: 'Cartas' },
+            { id: 'EPH', name: 'Efésios', englishName: 'Ephesians', testament: 'nt', chapters: 6, category: 'Cartas' },
+            { id: 'PHP', name: 'Filipenses', englishName: 'Philippians', testament: 'nt', chapters: 4, category: 'Cartas' },
+            { id: 'COL', name: 'Colossenses', englishName: 'Colossians', testament: 'nt', chapters: 4, category: 'Cartas' },
+            { id: '1TH', name: '1 Tessalonicenses', englishName: '1 Thessalonians', testament: 'nt', chapters: 5, category: 'Cartas' },
+            { id: '2TH', name: '2 Tessalonicenses', englishName: '2 Thessalonians', testament: 'nt', chapters: 3, category: 'Cartas' },
+            { id: '1TI', name: '1 Timóteo', englishName: '1 Timothy', testament: 'nt', chapters: 6, category: 'Cartas' },
+            { id: '2TI', name: '2 Timóteo', englishName: '2 Timothy', testament: 'nt', chapters: 4, category: 'Cartas' },
+            { id: 'TIT', name: 'Tito', englishName: 'Titus', testament: 'nt', chapters: 3, category: 'Cartas' },
+            { id: 'PHM', name: 'Filemom', englishName: 'Philemon', testament: 'nt', chapters: 1, category: 'Cartas' },
+            { id: 'HEB', name: 'Hebreus', englishName: 'Hebrews', testament: 'nt', chapters: 13, category: 'Cartas' },
+            { id: 'JAS', name: 'Tiago', englishName: 'James', testament: 'nt', chapters: 5, category: 'Cartas' },
+            { id: '1PET', name: '1 Pedro', englishName: '1 Peter', testament: 'nt', chapters: 5, category: 'Cartas' },
+            { id: '2PET', name: '2 Pedro', englishName: '2 Peter', testament: 'nt', chapters: 3, category: 'Cartas' },
+            { id: '1JHN', name: '1 João', englishName: '1 John', testament: 'nt', chapters: 5, category: 'Cartas' },
+            { id: '2JHN', name: '2 João', englishName: '2 John', testament: 'nt', chapters: 1, category: 'Cartas' },
+            { id: '3JHN', name: '3 João', englishName: '3 John', testament: 'nt', chapters: 1, category: 'Cartas' },
+            { id: 'JUD', name: 'Judas', englishName: 'Jude', testament: 'nt', chapters: 1, category: 'Cartas' },
+            { id: 'REV', name: 'Apocalipse', englishName: 'Revelation', testament: 'nt', chapters: 22, category: 'Profecia' }
         ];
 
-        const BIBLE_DATA = {
-            NVI: {
-                GEN: {
-                    1: [
-                        "No princípio criou Deus os céus e a terra.",
-                        "A terra era sem forma e vazia; havia trevas sobre a face do abismo, e o Espírito de Deus se movia sobre as águas.",
-                        "Disse Deus: Haja luz; e houve luz.",
-                        "Deus viu que a luz era boa, e fez separação entre a luz e as trevas.",
-                        "Deus chamou à luz Dia, e às trevas chamou Noite. Passaram-se a tarde e a manhã; esse foi o primeiro dia."
-                    ],
-                    2: [
-                        "Assim foram concluídos os céus e a terra, com todo o seu exército.",
-                        "No sétimo dia Deus já havia concluído a obra que realizara; nesse dia ele descansou de toda a obra que fizera.",
-                        "Abençoou Deus o sétimo dia e o santificou, porque nele descansou de toda a obra que realizara na criação.",
-                        "Esta é a história das origens dos céus e da terra, no tempo em que foram criados.",
-                        "O SENHOR Deus guardará a tua entrada e a tua saída, desde agora e para sempre."
-                    ]
-                },
-                PSA: {
-                    23: [
-                        "O SENHOR é o meu pastor; nada me faltará.",
-                        "Em verdes pastagens me faz descansar e me conduz a águas tranquilas.",
-                        "Restaura a minha alma; guia-me pelas veredas da justiça por amor do seu nome.",
-                        "Mesmo que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo; a tua vara e o teu cajado me consolam.",
-                        "Preparas um banquete para mim na presença dos meus inimigos. Unges a minha cabeça com óleo; o meu cálice transborda.",
-                        "Sei que a bondade e a fidelidade me acompanharão todos os dias da minha vida, e voltarei à casa do SENHOR enquanto eu viver."
-                    ],
-                    121: [
-                        "Levo os meus olhos para os montes: de onde me virá o socorro?",
-                        "O meu socorro vem do SENHOR, que fez o céu e a terra.",
-                        "Ele não permitirá que os teus pés vacilem; não dormitará aquele que te guarda.",
-                        "Com certeza não dormitará nem dormirá o guarda de Israel!",
-                        "O SENHOR é o teu guarda; o SENHOR é a tua sombra à tua direita.",
-                        "O sol não te fará mal de dia, nem a lua de noite.",
-                        "O SENHOR te guardará de todo o mal; ele guardará a tua alma.",
-                        "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
-                    ]
-                },
-                JHN: {
-                    3: [
-                        "Havia entre os fariseus um homem chamado Nicodemos, uma autoridade entre os judeus.",
-                        "Ele veio a Jesus de noite e disse: Mestre, sabemos que és mestre vindo da parte de Deus.",
-                        "Respondeu Jesus: Em verdade, em verdade lhe digo que, se alguém não nascer de novo, não pode ver o Reino de Deus.",
-                        "Porque Deus tanto amou o mundo que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna."
-                    ]
-                }
-            },
-            ARC: {
-                GEN: {
-                    1: [
-                        "No princípio, criou Deus os céus e a terra.",
-                        "E a terra era sem forma e vazia; e havia trevas sobre a face do abismo; e o Espírito de Deus se movia sobre a face das águas.",
-                        "E disse Deus: Haja luz. E houve luz.",
-                        "E viu Deus que era boa a luz; e fez Deus separação entre a luz e as trevas.",
-                        "E Deus chamou à luz Dia; e às trevas chamou Noite. E foi a tarde e a manhã: o dia primeiro."
-                    ]
-                },
-                PSA: {
-                    23: [
-                        "O SENHOR é o meu pastor; nada me faltará.",
-                        "Deitar-me faz em verdes pastos, guia-me mansamente a águas tranquilas.",
-                        "Refrigera a minha alma; guia-me pelas veredas da justiça por amor do seu nome.",
-                        "Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo; a tua vara e o teu cajado me consolam.",
-                        "Preparas uma mesa perante mim na presença dos meus inimigos, unges a minha cabeça com óleo, o meu cálice transborda.",
-                        "Certamente que a bondade e a misericórdia me seguirão todos os dias da minha vida; e habitarei na Casa do SENHOR por longos dias."
-                    ]
-                }
-            },
-            NAA: {
-                GEN: {
-                    1: [
-                        "No princípio, Deus criou os céus e a terra.",
-                        "A terra era sem forma e vazia; havia trevas sobre a face do abismo, e o Espírito de Deus se movia sobre as águas.",
-                        "E Deus disse: Haja luz. E houve luz.",
-                        "Deus viu que a luz era boa e fez separação entre a luz e as trevas.",
-                        "Deus chamou à luz Dia e às trevas chamou Noite. Houve tarde e manhã: o primeiro dia."
-                    ]
-                }
-            },
-            NVT: {
-                GEN: {
-                    1: [
-                        "No princípio, Deus criou os céus e a terra.",
-                        "A terra era sem forma e vazia, e a escuridão cobria as águas profundas. O Espírito de Deus pairava sobre a superfície das águas.",
-                        "Então Deus disse: Haja luz, e houve luz.",
-                        "E Deus viu que a luz era boa, e separou a luz da escuridão.",
-                        "Deus chamou a luz de Dia e a escuridão de Noite. A noite passou e veio a manhã, encerrando o primeiro dia."
-                    ]
-                }
-            }
+        // Abreviações usadas na busca (além do nome em português, inglês e do ID)
+        const BOOK_ALIASES = {
+            GEN: ['gn'], EXO: ['ex'], LEV: ['lv'], NUM: ['nm', 'nu'], DEU: ['dt', 'deut'], JOS: ['js'], JDG: ['jz'], RUT: ['rt'],
+            '1SAM': ['1sm', '1sa'], '2SAM': ['2sm', '2sa'], '1KIN': ['1rs', '1re', '1kgs'], '2KIN': ['2rs', '2re', '2kgs'],
+            '1CHR': ['1cr', '1ch'], '2CHR': ['2cr', '2ch'], EZR: ['ed', 'esd'], NEH: ['ne'], EST: ['et'],
+            JOB: [], PSA: ['sl', 'sal', 'salmo', 'ps'], PRO: ['pv', 'pr', 'prov'], ECC: ['ec', 'ecl'],
+            SNG: ['ct', 'cantares', 'cantico', 'cant'], ISA: ['is'], JER: ['jr'], LAM: ['lm'], EZK: ['ez', 'eze'], DAN: ['dn'],
+            HOS: ['os'], JOL: ['jl'], AMO: ['am'], OBA: ['ob'], JON: ['jn'], MIC: ['mq', 'mi'], NAM: ['na'], HAB: ['hc'],
+            ZEP: ['sf'], HAG: ['ag'], ZEC: ['zc'], MAL: ['ml'],
+            MAT: ['mt'], MRK: ['mc', 'mr'], LUK: ['lc'], JHN: ['jo'], ACT: ['at'], ROM: ['rm'],
+            '1COR': ['1co'], '2COR': ['2co'], GAL: ['gl'], EPH: ['ef'], PHP: ['fp', 'fl'], COL: ['cl'],
+            '1TH': ['1ts'], '2TH': ['2ts'], '1TI': ['1tm'], '2TI': ['2tm'], TIT: ['tt'], PHM: ['fm'], HEB: ['hb'], JAS: ['tg'],
+            '1PET': ['1pe'], '2PET': ['2pe'], '1JHN': ['1jo'], '2JHN': ['2jo'], '3JHN': ['3jo'], JUD: ['jd'], REV: ['ap']
+        };
+        // Desempate em abreviações ambíguas ("jo" = João ou Jó)
+        const SEARCH_PRIORITY = { JHN: 5 };
+
+        const KEY_SCRIPTURES = {
+            GEN_1: [
+                "No princípio criou Deus os céus e a terra.",
+                "A terra era sem forma e vazia; havia trevas sobre a face do abismo, e o Espírito de Deus se movia sobre as águas.",
+                "Disse Deus: Haja luz; e houve luz.",
+                "Deus viu que a luz era boa, e fez separação entre a luz e as trevas.",
+                "Deus chamou à luz Dia, e às trevas chamou Noite. Passaram-se a tarde e a manhã; esse foi o primeiro dia."
+            ],
+            PSA_23: [
+                "O SENHOR é o meu pastor; nada me faltará.",
+                "Em verdes pastagens me faz descansar e me conduz a águas tranquilas.",
+                "Restaura a minha alma; guia-me pelas veredas da justiça por amor do seu nome.",
+                "Mesmo que eu ande pelo vale da sombra da morte, não temerei mal algum, porque tu estás comigo; a tua vara e o teu cajado me consolam.",
+                "Preparas um banquete para mim na presença dos meus inimigos. Unges a minha cabeça com óleo; o meu cálice transborda.",
+                "Sei que a bondade e a fidelidade me acompanharão todos os dias da minha vida, e voltarei à casa do SENHOR enquanto eu viver."
+            ],
+            PSA_121: [
+                "Levo os meus olhos para os montes: de onde me virá o socorro?",
+                "O meu socorro vem do SENHOR, que fez o céu e a terra.",
+                "Ele não permitirá que os teus pés vacilem; não dormitará aquele que te guarda.",
+                "Com certeza não dormitará nem dormirá o guarda de Israel!",
+                "O SENHOR é o teu guarda; o SENHOR é a tua sombra à tua direita.",
+                "O sol não te fará mal de dia, nem a lua de noite.",
+                "O SENHOR te guardará de todo o mal; ele guardará a tua alma.",
+                "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."
+            ],
+            JHN_3: [
+                "Havia entre os fariseus um homem chamado Nicodemos, uma autoridade entre os judeus.",
+                "Ele veio a Jesus de noite e disse: Mestre, sabemos que és mestre vindo da parte de Deus.",
+                "Respondeu Jesus: Em verdade, em verdade lhe digo que, se alguém não nascer de novo, não pode ver o Reino de Deus.",
+                "Porque Deus tanto amou o mundo que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna.",
+                "Pois Deus enviou o seu Filho ao mundo, não para condenar o mundo, mas para que o mundo fosse salvo por meio dele."
+            ],
+            ROM_8: [
+                "Portanto, agora já não há nenhuma condenação para os que estão em Cristo Jesus.",
+                "Porque a lei do Espírito da vida, em Cristo Jesus, os libertou da lei do pecado e da morte.",
+                "Sabemos que todas as coisas cooperam para o bem daqueles que amam a Deus, daqueles que são chamados segundo o seu propósito.",
+                "Que diremos, pois, diante dessas coisas? Se Deus é por nós, quem será contra nós?",
+                "Quem nos separará do amor de Cristo? Será tribulação, ou angústia, ou perseguição, ou fome, ou nudez, ou perigo, ou espada?"
+            ]
         };
 
         const DRAMA_STORIES = [
@@ -769,8 +864,20 @@
                 duration: '5 min',
                 desc: 'O revelador diálogo sobre o novo nascimento e o amor incondicional.',
                 bgImage: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=600'
+            },
+            {
+                id: 'mountain',
+                title: 'O Sermão da Montanha',
+                reference: 'Mateus 5',
+                duration: '6 min',
+                desc: 'As bem-aventuranças e os ensinamentos eternos sobre a luz do mundo.',
+                bgImage: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'
             }
         ];
+
+        function loadJSON(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key) || ''); } catch (e) { return fallback; }
+        }
 
         let state = {
             theme: localStorage.getItem('lumina_theme') || 'dark',
@@ -781,30 +888,57 @@
             activeTab: 'reader',
             selectedVerseNum: null,
             selectedVerseText: '',
-            highlights: JSON.parse(localStorage.getItem('lumina_highlights') || '{}'),
-            notes: JSON.parse(localStorage.getItem('lumina_notes') || '{}'),
+            highlights: loadJSON('lumina_highlights', {}),
+            notes: loadJSON('lumina_notes', {}),
             streak: parseInt(localStorage.getItem('lumina_streak') || '3'),
+            devotionalCompleted: loadJSON('lumina_devotional_completed', []),
+            currentDevotionalDay: 1,
             isDramaMode: false,
             isPlayingAudio: false,
             audioSpeed: 1.0,
-            fontSize: parseInt(localStorage.getItem('lumina_font_size') || '20')
+            fontSize: parseInt(localStorage.getItem('lumina_font_size') || '20'),
+            recents: loadJSON('lumina_recents', []),       // [{bookId, chapter}]
+            favorites: loadJSON('lumina_favorites', [])    // ["BOOKID_CAP"]
         };
 
         let currentUtterance = null;
+        let verseCache = {};
+        let renderToken = 0;
+        let apiFailedAt = 0;
+        let navBookId = 'GEN'; // livro exibido na vista de capítulos do navegador
 
-        window.onload = function() {
-            // Apply saved theme
+        // =========================================================
+        // INICIALIZAÇÃO
+        // =========================================================
+        window.onload = function () {
             applyTheme(state.theme);
+            $('header-version-select').value = state.currentVersion;
 
-            // Synchronize Version selector
-            document.getElementById('header-version-select').value = state.currentVersion;
-            
-            // Render components
-            renderChapter();
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const dayOfYear = Math.min(365, Math.max(1, Math.floor((now - start) / 86400000)));
+            state.currentDevotionalDay = dayOfYear;
+
             renderStories();
+            renderDevotionalDay(dayOfYear);
             loadSavedBgSettings();
+            initNavigationEvents();
+
+            // Posição inicial: link direto (#/JHN/3/16) > última leitura > Gênesis 1
+            const fromHash = parseHash();
+            const last = loadJSON('lumina_last', null);
+            if (fromHash) {
+                goTo(fromHash.bookId, fromHash.chapter, fromHash.verse, { fromHash: true, initial: true });
+            } else if (last && getBookObj(last.bookId).id === last.bookId) {
+                goTo(last.bookId, last.chapter, null, { initial: true, replaceHash: true });
+            } else {
+                goTo('GEN', 1, null, { initial: true, replaceHash: true });
+            }
         };
 
+        // =========================================================
+        // TEMA
+        // =========================================================
         function toggleTheme() {
             const newTheme = state.theme === 'dark' ? 'light' : 'dark';
             state.theme = newTheme;
@@ -815,8 +949,8 @@
 
         function applyTheme(theme) {
             const html = document.documentElement;
-            const themeIcon = document.getElementById('theme-icon');
-            const themeText = document.getElementById('theme-text');
+            const themeIcon = $('theme-icon');
+            const themeText = $('theme-text');
 
             if (theme === 'dark') {
                 html.classList.add('dark');
@@ -827,8 +961,6 @@
                 if (themeIcon) themeIcon.className = 'fa-solid fa-sun text-sm sm:text-base text-amber-500';
                 if (themeText) themeText.innerText = 'Tema Claro';
             }
-
-            // Sync adaptive overlay contrast
             updateBgSettings();
         }
 
@@ -836,39 +968,144 @@
             return BIBLE_BOOKS.find(b => b.id === bookId) || BIBLE_BOOKS[0];
         }
 
-        function renderChapter() {
+        // =========================================================
+        // TEXTO BÍBLICO
+        // =========================================================
+        function generateContextualVerses(book, chapter) {
+            const verseCount = Math.floor(Math.abs(Math.sin(chapter * 13 + book.chapters) * 15)) + 12;
+            const verses = [];
+
+            const themePhrases = {
+                'Torá': [
+                    `E disse o SENHOR Deus no capítulo ${chapter}: Guarda os meus mandamentos e viverás em paz.`,
+                    "Estas são as leis e os estatutos dados ao povo para a sua santificação.",
+                    "Lembra-te de todas as obras poderosas realizadas diante dos teus olhos.",
+                    "O SENHOR teu Deus te abençoará em toda a terra que fores possuir.",
+                    "Sê forte e corajoso, não temas, porque o Criador é contigo por onde quer que andares."
+                ],
+                'Poesia': [
+                    `O SENHOR é o meu escudo e a minha fortaleza; em quem confiarei no dia de aflição.`,
+                    `Louvem ao SENHOR com cânticos de gratidão, porque a sua misericórdia dura para sempre.`,
+                    "A sabedoria edifica a casa e a prudência a consolida na verdade.",
+                    "Lâmpada para os meus pés é a tua palavra e luz brilhante para o meu caminho.",
+                    "Cria em mim um coração puro, ó Deus, e renova em mim um espírito reto."
+                ],
+                'Profetas': [
+                    `Assim diz o SENHOR: Olhai para mim e sereis salvos, todos os confins da terra.`,
+                    "Buscai ao SENHOR enquanto se pode achar, invocai-o enquanto está perto.",
+                    "Consolai o meu povo, dizeis ao seu coração que a sua vitória é certa.",
+                    "As misericórdias do SENHOR são a causa de não sermos consumidos, renovam-se a cada manhã.",
+                    "Pois eu bem sei os pensamentos que tenho a vosso respeito, pensamentos de paz."
+                ],
+                'Evangelhos': [
+                    `Jesus disse-lhes: Eu sou o caminho, a verdade e a vida; ninguém vem ao Pai senão por mim.`,
+                    "Amarás o Senhor teu Deus de todo o teu coração e ao teu próximo como a ti mesmo.",
+                    "Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.",
+                    "No mundo tereis aflições, mas tende bom ânimo; eu venci o mundo.",
+                    "Buscai primeiro o Reino de Deus e a sua justiça, e todas as coisas vos serão acrescentadas."
+                ],
+                'Cartas': [
+                    `A graça do Senhor Jesus Cristo e o amor de Deus estejam com todos vós.`,
+                    "Porque pela graça sois salvos, por meio da fé; e isto não vem de vós, é dom de Deus.",
+                    "Alegrai-vos sempre no Senhor; outra vez digo, alegrai-vos.",
+                    "Tudo posso naquele que me fortalece com o seu poder e a sua glória.",
+                    "A palavra de Cristo habite em vós abundantemente com toda a sabedoria."
+                ]
+            };
+
+            const pool = themePhrases[book.category] || themePhrases['Cartas'];
+
+            for (let i = 1; i <= verseCount; i++) {
+                const phraseIndex = (i + chapter) % pool.length;
+                verses.push(`${i}. ${pool[phraseIndex]}`);
+            }
+
+            return verses;
+        }
+
+        // Retorna { verses, source } onde source = 'api' | 'partial' | 'sample'
+        async function fetchVersesForChapter(book, chapter, version) {
+            const cacheKey = `${version}_${book.id}_${chapter}`;
+
+            if (verseCache[cacheKey]) return verseCache[cacheKey];
+
+            // A API vem primeiro: os trechos locais são só um reserva para quando não há conexão
+            if (Date.now() - apiFailedAt > 20000) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+                    const response = await fetch(`https://bible-api.com/${encodeURIComponent(book.englishName)}+${chapter}?translation=almeida`, {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.verses && data.verses.length > 0) {
+                            const result = { verses: data.verses.map(v => cleanScriptureText(v.text)), source: 'api' };
+                            verseCache[cacheKey] = result;
+                            return result;
+                        }
+                    }
+                } catch (err) {
+                    apiFailedAt = Date.now();
+                    console.warn('Falha ao buscar na API; usando reserva local.');
+                }
+            }
+
+            // Reserva 1: trechos conhecidos (parciais)
+            const key = KEY_SCRIPTURES[`${book.id}_${chapter}`];
+            if (key) return { verses: key, source: 'partial' };
+
+            // Reserva 2: texto de exemplo (NÃO é o texto bíblico real)
+            return { verses: generateContextualVerses(book, chapter), source: 'sample' };
+        }
+
+        async function renderChapter(opts = {}) {
+            const token = ++renderToken;
             const book = getBookObj(state.currentBookId);
             const version = state.currentVersion;
-            
-            document.getElementById('current-location-text').innerHTML = `${book.name} ${state.currentChapter} <i class="fa-solid fa-chevron-down text-xs text-amber-500"></i>`;
-            document.getElementById('chapter-title-heading').innerText = `${book.name} ${state.currentChapter}`;
-            document.getElementById('version-badge-code').innerText = version;
+            const keepY = opts.keepScroll ? window.scrollY : null;
 
-            const container = document.getElementById('verses-container');
+            $('current-book-text').innerText = book.name;
+            $('current-chapter-text').innerText = state.currentChapter;
+            $('current-chapter-total').innerText = `/ ${book.chapters}`;
+            $('chapter-title-heading').innerText = `${book.name} ${state.currentChapter}`;
+            $('version-badge-code').innerText = version;
+            document.title = `${book.name} ${state.currentChapter} • Lumina Bíblia`;
+            updateFavButton();
+
+            const container = $('verses-container');
+            const spinner = $('loading-spinner');
+
             container.innerHTML = '';
+            $('offline-notice').classList.add('hidden');
+            spinner.classList.remove('hidden');
 
-            let verses = [];
-            if (BIBLE_DATA[version] && BIBLE_DATA[version][state.currentBookId] && BIBLE_DATA[version][state.currentBookId][state.currentChapter]) {
-                verses = BIBLE_DATA[version][state.currentBookId][state.currentChapter];
-            } else {
-                // Fallback scripture verses (100% pure without parenthesis)
-                verses = [
-                    "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre.",
-                    "Lâmpada para os meus pés é tua palavra e luz, para o meu caminho.",
-                    "Tudo posso naquele que me fortalece.",
-                    "O SENHOR é a minha luz e a minha salvação; a quem temerei?",
-                    "Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia."
-                ];
+            const { verses, source } = await fetchVersesForChapter(book, state.currentChapter, version);
+
+            // Se o usuário já navegou para outro capítulo enquanto carregava, descarta este resultado
+            if (token !== renderToken) return;
+
+            spinner.classList.add('hidden');
+
+            if (source !== 'api') {
+                $('offline-notice-text').innerText = source === 'partial'
+                    ? 'Sem conexão com a fonte do texto: exibindo apenas um trecho deste capítulo.'
+                    : 'Sem conexão com a fonte do texto: estes versículos são apenas um texto de exemplo, não o texto bíblico real. Conecte-se à internet e navegue novamente.';
+                $('offline-notice').classList.remove('hidden');
             }
 
             verses.forEach((rawText, index) => {
                 const verseNum = index + 1;
-                const pureText = cleanScriptureText(rawText);
+                let pureText = cleanScriptureText(rawText).replace(/^\d+\.\s*/, '');
 
                 const verseKey = `${version}_${state.currentBookId}_${state.currentChapter}_${verseNum}`;
                 const hlColor = state.highlights[verseKey] || '';
 
                 const verseEl = document.createElement('div');
+                verseEl.id = `verse-${verseNum}`;
                 verseEl.className = `group p-3 rounded-xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-200/40 dark:hover:bg-slate-800/40 ${hlColor ? 'hl-' + hlColor : ''}`;
                 verseEl.onclick = () => openVerseModal(verseNum, pureText);
 
@@ -879,110 +1116,514 @@
 
                 container.appendChild(verseEl);
             });
+
+            if (opts.verse) {
+                const el = $(`verse-${opts.verse}`);
+                if (el) {
+                    setTimeout(() => {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('verse-flash');
+                        setTimeout(() => el.classList.remove('verse-flash'), 2200);
+                    }, 60);
+                } else {
+                    showToast(`Versículo ${opts.verse} não encontrado neste capítulo`);
+                }
+            } else if (keepY !== null) {
+                window.scrollTo(0, keepY);
+            }
+
+            updateReadProgress();
+
+            // Pré-carrega o próximo capítulo do mesmo livro para a navegação ficar instantânea
+            if (source === 'api' && state.currentChapter < book.chapters) {
+                fetchVersesForChapter(book, state.currentChapter + 1, version);
+            }
         }
 
         function changeVersion(newVersion) {
             state.currentVersion = newVersion;
             localStorage.setItem('lumina_version', newVersion);
             showToast(`Versão alterada para ${newVersion}`);
-            renderChapter();
+            renderChapter({ keepScroll: true });
+        }
+
+        // =========================================================
+        // NAVEGAÇÃO CENTRAL
+        // =========================================================
+        function goTo(bookId, chapter, verse = null, opts = {}) {
+            const book = BIBLE_BOOKS.find(b => b.id === bookId);
+            if (!book) return;
+            chapter = Math.min(book.chapters, Math.max(1, parseInt(chapter) || 1));
+
+            const changed = book.id !== state.currentBookId || chapter !== state.currentChapter;
+            state.currentBookId = book.id;
+            state.currentChapter = chapter;
+
+            closeBookModal();
+            if (state.activeTab !== 'reader') switchTab('reader', true);
+
+            if (changed && window.speechSynthesis && window.speechSynthesis.speaking) stopAudio();
+
+            localStorage.setItem('lumina_last', JSON.stringify({ bookId: book.id, chapter }));
+            pushRecent(book.id, chapter);
+            if (!opts.fromHash) updateHash(verse, opts.replaceHash);
+
+            if (!verse) window.scrollTo({ top: 0, behavior: 'auto' });
+            renderChapter({ verse });
         }
 
         function navigateChapter(delta) {
-            const book = getBookObj(state.currentBookId);
-            let newChap = state.currentChapter + delta;
+            const idx = BIBLE_BOOKS.findIndex(b => b.id === state.currentBookId);
+            const book = BIBLE_BOOKS[idx];
+            const newChap = state.currentChapter + delta;
 
             if (newChap >= 1 && newChap <= book.chapters) {
-                state.currentChapter = newChap;
-                renderChapter();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                goTo(book.id, newChap);
+            } else if (delta > 0 && idx < BIBLE_BOOKS.length - 1) {
+                const next = BIBLE_BOOKS[idx + 1];
+                showToast(`Iniciando ${next.name}`);
+                goTo(next.id, 1);
+            } else if (delta < 0 && idx > 0) {
+                const prev = BIBLE_BOOKS[idx - 1];
+                showToast(`Retornando a ${prev.name}`);
+                goTo(prev.id, prev.chapters);
             } else {
-                showToast("Fim dos capítulos deste livro.");
+                showToast(delta > 0 ? 'Fim das Escrituras.' : 'Você está no início da Bíblia.');
             }
         }
 
-        function openBookModal() {
-            document.getElementById('modal-books').classList.remove('hidden');
-            renderBooksGrid();
+        // Links diretos: #/JHN/3/16
+        function parseHash() {
+            const m = location.hash.match(/^#\/([A-Za-z0-9]+)\/(\d+)(?:\/(\d+))?$/);
+            if (!m) return null;
+            const bookId = m[1].toUpperCase();
+            if (!BIBLE_BOOKS.some(b => b.id === bookId)) return null;
+            return { bookId, chapter: parseInt(m[2]), verse: m[3] ? parseInt(m[3]) : null };
         }
+
+        function updateHash(verse, replace) {
+            const h = `#/${state.currentBookId}/${state.currentChapter}${verse ? '/' + verse : ''}`;
+            if (location.hash === h) return;
+            try {
+                if (replace) history.replaceState(null, '', h);
+                else history.pushState(null, '', h);
+            } catch (e) { /* ambientes em sandbox podem bloquear o histórico */ }
+        }
+
+        function pushRecent(bookId, chapter) {
+            state.recents = state.recents.filter(r => !(r.bookId === bookId && r.chapter === chapter));
+            state.recents.unshift({ bookId, chapter });
+            state.recents = state.recents.slice(0, 10);
+            localStorage.setItem('lumina_recents', JSON.stringify(state.recents));
+        }
+
+        // Favoritos
+        function favKey(bookId, chapter) { return `${bookId}_${chapter}`; }
+
+        function isFavorite(bookId, chapter) { return state.favorites.includes(favKey(bookId, chapter)); }
+
+        function toggleFavorite() {
+            const key = favKey(state.currentBookId, state.currentChapter);
+            const book = getBookObj(state.currentBookId);
+            if (state.favorites.includes(key)) {
+                state.favorites = state.favorites.filter(k => k !== key);
+                showToast(`${book.name} ${state.currentChapter} removido dos favoritos`);
+            } else {
+                state.favorites.unshift(key);
+                showToast(`${book.name} ${state.currentChapter} favoritado!`);
+            }
+            localStorage.setItem('lumina_favorites', JSON.stringify(state.favorites));
+            updateFavButton();
+        }
+
+        function updateFavButton() {
+            const fav = isFavorite(state.currentBookId, state.currentChapter);
+            const icon = $('fav-icon');
+            const btn = $('btn-fav');
+            if (!icon || !btn) return;
+            icon.className = fav ? 'fa-solid fa-star text-sm text-amber-500' : 'fa-regular fa-star text-sm';
+            btn.title = fav ? 'Remover dos favoritos' : 'Favoritar este capítulo';
+        }
+
+        // =========================================================
+        // BUSCA E INTERPRETAÇÃO DE REFERÊNCIAS
+        // =========================================================
+        function norm(s) {
+            return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+        }
+
+        // "1 co 13:4" -> { book: "1 co", chapter: 13, verse: 4 }
+        function parseReference(input) {
+            const q = input.trim();
+            const m = q.match(/^((?:[123]\s*)?[^\d:.,;]+?)\s*(?:(\d{1,3})(?:\s*[:.,;]\s*|\s+)?(\d{1,3})?)?$/);
+            if (!m) return { book: q, chapter: null, verse: null };
+            return {
+                book: m[1].trim(),
+                chapter: m[2] ? parseInt(m[2]) : null,
+                verse: m[3] ? parseInt(m[3]) : null
+            };
+        }
+
+        function findBooks(part) {
+            const q = norm(part);
+            if (!q) return [];
+            const results = [];
+            BIBLE_BOOKS.forEach((book, idx) => {
+                const keys = [norm(book.name), norm(book.englishName), norm(book.id)]
+                    .concat((BOOK_ALIASES[book.id] || []).map(norm));
+                let score = 0;
+                if (keys.includes(q)) score = 100 + (SEARCH_PRIORITY[book.id] || 0);
+                else if (keys.some(k => k.startsWith(q))) score = 60;
+                else if (q.length >= 3 && keys.some(k => k.includes(q))) score = 25;
+                if (score > 0) results.push({ book, score, idx });
+            });
+            results.sort((a, b) => b.score - a.score || a.idx - b.idx);
+            return results;
+        }
+
+        function handleSearchKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitSearch();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                if (e.target.value) clearSearch(); else closeBookModal();
+            }
+        }
+
+        function submitSearch() {
+            const q = $('book-search-input').value.trim();
+            if (!q) return;
+            const ref = parseReference(q);
+            const matches = findBooks(ref.book);
+            if (!matches.length) return;
+            const book = matches[0].book;
+
+            if (ref.chapter) {
+                if (ref.chapter <= book.chapters) goTo(book.id, ref.chapter, ref.verse);
+                else showToast(`${book.name} tem apenas ${book.chapters} capítulo${book.chapters === 1 ? '' : 's'}`);
+            } else if (book.chapters === 1) {
+                goTo(book.id, 1);
+            } else {
+                showChapters(book.id);
+            }
+        }
+
+        function clearSearch() {
+            const input = $('book-search-input');
+            input.value = '';
+            input.focus();
+            renderBooks();
+        }
+
+        // =========================================================
+        // NAVEGADOR (MODAL) — vista de livros
+        // =========================================================
+        function openNavigator(view = 'books', focusSearch = false) {
+            $('modal-books').classList.remove('hidden');
+            if (view === 'chapters') {
+                showChapters(state.currentBookId);
+            } else {
+                state.testamentTab = getBookObj(state.currentBookId).testament;
+                $('book-search-input').value = '';
+                showBooks();
+                if (focusSearch || window.innerWidth >= 640) {
+                    setTimeout(() => $('book-search-input').focus(), 50);
+                }
+            }
+        }
+
+        // Mantido por compatibilidade
+        function openBookModal() { openNavigator('books'); }
 
         function closeBookModal() {
-            document.getElementById('modal-books').classList.add('hidden');
-            document.getElementById('chapters-picker-section').classList.add('hidden');
+            $('modal-books').classList.add('hidden');
         }
 
-        function filterBooks(query) {
-            renderBooksGrid(query.trim().toLowerCase());
+        function showBooks() {
+            $('nav-view-chapters').style.display = 'none';
+            $('nav-view-books').style.display = 'flex';
+            $('nav-title').innerHTML = '<i class="fa-solid fa-book-bible"></i> Livros da Bíblia';
+            updateTestamentTabs();
+            renderBooks();
+
+            const current = $('books-grid').querySelector('[data-current="1"]');
+            if (current && !$('book-search-input').value) current.scrollIntoView({ block: 'center' });
         }
 
         function switchTestament(testament) {
             state.testamentTab = testament;
-            document.getElementById('tab-ot-btn').className = testament === 'ot' ? 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40" : 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent";
-            document.getElementById('tab-nt-btn').className = testament === 'nt' ? 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40" : 
-                "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent";
-            renderBooksGrid();
+            updateTestamentTabs();
+            renderBooks();
+            $('books-scroll').scrollTop = 0;
         }
 
-        function renderBooksGrid(filterQuery = '') {
-            const grid = document.getElementById('books-grid');
+        function updateTestamentTabs() {
+            const on = "flex-1 py-3 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-slate-200/30 dark:bg-slate-800/40";
+            const off = "flex-1 py-3 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 border-b-2 border-transparent";
+            $('tab-ot-btn').className = state.testamentTab === 'ot' ? on : off;
+            $('tab-nt-btn').className = state.testamentTab === 'nt' ? on : off;
+        }
+
+        function makeBookButton(book, suffix = '') {
+            const isCurrent = book.id === state.currentBookId;
+            const btn = document.createElement('button');
+            btn.dataset.current = isCurrent ? '1' : '';
+            btn.className = `p-3 rounded-xl border text-left transition-all ${isCurrent
+                ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400 font-bold'
+                : 'bg-slate-200/60 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'}`;
+            btn.innerHTML = `
+                <div class="text-xs font-bold truncate">${book.name}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400">${book.chapters} ${book.chapters === 1 ? 'cap.' : 'caps.'}${suffix}</div>
+            `;
+            // Livros de 1 capítulo vão direto para a leitura
+            btn.onclick = () => book.chapters === 1 ? goTo(book.id, 1) : showChapters(book.id);
+            return btn;
+        }
+
+        function renderBooks() {
+            const q = $('book-search-input').value.trim();
+            const grid = $('books-grid');
+            const goto = $('goto-suggestion');
+            const recents = $('recents-section');
             grid.innerHTML = '';
+            $('search-clear-btn').style.display = q ? 'block' : 'none';
 
-            const filtered = BIBLE_BOOKS.filter(b => {
-                const matchesTestament = b.testament === state.testamentTab;
-                const matchesSearch = filterQuery === '' || b.name.toLowerCase().includes(filterQuery);
-                return filterQuery !== '' ? matchesSearch : (matchesTestament && matchesSearch);
-            });
+            if (!q) {
+                $('testament-tabs').style.display = 'flex';
+                goto.style.display = 'none';
+                renderQuickAccess();
 
-            filtered.forEach(b => {
-                const btn = document.createElement('button');
-                btn.className = `p-3 rounded-xl border text-left transition-all ${b.id === state.currentBookId ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400 font-bold' : 'bg-slate-200/60 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'}`;
-                btn.innerHTML = `
-                    <div class="text-xs font-bold truncate">${b.name}</div>
-                    <div class="text-[10px] text-slate-500 dark:text-slate-400">${b.chapters} caps</div>
-                `;
-                btn.onclick = () => selectBookForChapters(b);
-                grid.appendChild(btn);
+                const list = BIBLE_BOOKS.filter(b => b.testament === state.testamentTab);
+                let lastCategory = null;
+                list.forEach(book => {
+                    if (book.category !== lastCategory) {
+                        lastCategory = book.category;
+                        const count = list.filter(b => b.category === book.category).length;
+                        const h = document.createElement('div');
+                        h.className = 'col-span-full text-[11px] uppercase tracking-wider font-extrabold text-amber-600 dark:text-amber-400 mt-2 first:mt-0 flex items-center gap-2';
+                        h.innerHTML = `${book.category} <span class="text-slate-400 dark:text-slate-500 font-semibold normal-case tracking-normal">(${count})</span><span class="flex-1 h-px bg-slate-300/60 dark:bg-slate-700/60"></span>`;
+                        grid.appendChild(h);
+                    }
+                    grid.appendChild(makeBookButton(book));
+                });
+                return;
+            }
+
+            // Modo busca: procura em toda a Bíblia
+            $('testament-tabs').style.display = 'none';
+            recents.style.display = 'none';
+
+            const ref = parseReference(q);
+            const matches = findBooks(ref.book);
+
+            goto.innerHTML = '';
+            if (ref.chapter && matches.length) {
+                const b = matches[0].book;
+                const label = `${b.name} ${ref.chapter}${ref.verse ? ':' + ref.verse : ''}`;
+                if (ref.chapter <= b.chapters) {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow transition-all';
+                    btn.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-arrow-right"></i> Ir para ${label}</span><span class="text-[11px] opacity-70">Enter ↵</span>`;
+                    btn.onclick = () => goTo(b.id, ref.chapter, ref.verse);
+                    goto.appendChild(btn);
+                } else {
+                    const msg = document.createElement('div');
+                    msg.className = 'p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold';
+                    msg.innerText = `${b.name} tem apenas ${b.chapters} capítulo${b.chapters === 1 ? '' : 's'}.`;
+                    goto.appendChild(msg);
+                }
+                goto.style.display = 'block';
+            } else {
+                goto.style.display = 'none';
+            }
+
+            if (!matches.length) {
+                const empty = document.createElement('div');
+                empty.className = 'col-span-full text-center text-sm text-slate-500 dark:text-slate-400 py-8';
+                empty.innerHTML = `<i class="fa-regular fa-face-frown text-2xl mb-2 block"></i>Nenhum livro encontrado para "${q.replace(/</g, '&lt;')}".`;
+                grid.appendChild(empty);
+                return;
+            }
+
+            matches.slice(0, 16).forEach(({ book }) => {
+                grid.appendChild(makeBookButton(book, ` • ${book.testament === 'ot' ? 'AT' : 'NT'}`));
             });
         }
 
-        function selectBookForChapters(book) {
-            state.currentBookId = book.id;
-            const section = document.getElementById('chapters-picker-section');
-            const grid = document.getElementById('chapters-grid');
-            document.getElementById('selected-book-name-title').innerText = `Capítulos de ${book.name}:`;
+        // Recentes e favoritos
+        function renderQuickAccess() {
+            const sec = $('recents-section');
+            sec.innerHTML = '';
 
+            const recents = state.recents.slice(1, 7); // ignora o capítulo que já está aberto
+            const favorites = state.favorites.slice(0, 8).map(k => {
+                const [bookId, chapter] = k.split('_');
+                return { bookId, chapter: parseInt(chapter) };
+            });
+
+            const addRow = (title, icon, items) => {
+                if (!items.length) return;
+                const wrap = document.createElement('div');
+                wrap.innerHTML = `<div class="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5"><i class="${icon} text-amber-500"></i>${title}</div>`;
+                const row = document.createElement('div');
+                row.className = 'flex flex-wrap gap-2';
+                items.forEach(it => {
+                    const book = getBookObj(it.bookId);
+                    const chip = document.createElement('button');
+                    chip.className = 'px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-300 dark:border-slate-700 transition-all';
+                    chip.innerText = `${book.name} ${it.chapter}`;
+                    chip.onclick = () => goTo(it.bookId, it.chapter);
+                    row.appendChild(chip);
+                });
+                wrap.appendChild(row);
+                sec.appendChild(wrap);
+            };
+
+            addRow('Favoritos', 'fa-solid fa-star', favorites);
+            addRow('Lidos recentemente', 'fa-solid fa-clock-rotate-left', recents);
+            sec.style.display = sec.children.length ? 'block' : 'none';
+        }
+
+        // =========================================================
+        // NAVEGADOR (MODAL) — vista de capítulos
+        // =========================================================
+        function showChapters(bookId) {
+            const book = getBookObj(bookId);
+            navBookId = book.id;
+            const idx = BIBLE_BOOKS.findIndex(b => b.id === book.id);
+
+            $('nav-view-books').style.display = 'none';
+            $('nav-view-chapters').style.display = 'flex';
+            $('nav-title').innerHTML = '<i class="fa-solid fa-hashtag"></i> Escolher Capítulo';
+
+            $('chapters-book-name').innerText = book.name;
+            $('chapters-book-meta').innerText = `${book.chapters} ${book.chapters === 1 ? 'capítulo' : 'capítulos'} • ${book.testament === 'ot' ? 'Antigo' : 'Novo'} Testamento • ${book.category}`;
+
+            const prev = BIBLE_BOOKS[idx - 1];
+            const next = BIBLE_BOOKS[idx + 1];
+            $('btn-prev-book').style.visibility = prev ? 'visible' : 'hidden';
+            $('btn-next-book').style.visibility = next ? 'visible' : 'hidden';
+            $('prev-book-label').innerText = prev ? prev.name : '';
+            $('next-book-label').innerText = next ? next.name : '';
+
+            const grid = $('chapters-grid');
             grid.innerHTML = '';
             for (let c = 1; c <= book.chapters; c++) {
+                const isCurrent = book.id === state.currentBookId && c === state.currentChapter;
+                const fav = isFavorite(book.id, c);
                 const btn = document.createElement('button');
-                btn.className = `p-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 font-bold text-xs text-center border border-slate-300 dark:border-slate-700 transition-all ${c === state.currentChapter ? 'bg-amber-500 text-slate-950' : 'text-slate-800 dark:text-slate-200'}`;
-                btn.innerText = c;
-                btn.onclick = () => {
-                    state.currentChapter = c;
-                    closeBookModal();
-                    renderChapter();
-                };
+                btn.dataset.current = isCurrent ? '1' : '';
+                btn.className = `relative p-2.5 rounded-lg font-bold text-sm text-center border transition-all ${isCurrent
+                    ? 'bg-amber-500 text-slate-950 border-amber-500'
+                    : 'bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700'}`;
+                btn.innerHTML = `${c}${fav ? '<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-500 ring-1 ring-slate-100 dark:ring-slate-900"></span>' : ''}`;
+                btn.onclick = () => goTo(book.id, c);
                 grid.appendChild(btn);
             }
 
-            section.classList.remove('hidden');
+            const cur = grid.querySelector('[data-current="1"]');
+            if (cur) setTimeout(() => cur.scrollIntoView({ block: 'center' }), 30);
         }
 
+        function stepBook(delta) {
+            const idx = BIBLE_BOOKS.findIndex(b => b.id === navBookId) + delta;
+            if (idx >= 0 && idx < BIBLE_BOOKS.length) showChapters(BIBLE_BOOKS[idx].id);
+        }
+
+        // =========================================================
+        // EVENTOS DE NAVEGAÇÃO: teclado, swipe, histórico, progresso
+        // =========================================================
+        function isModalOpen(id) { return !$(id).classList.contains('hidden'); }
+
+        function anyModalOpen() {
+            return ['modal-books', 'modal-bg', 'modal-verse-action', 'modal-card-generator'].some(isModalOpen);
+        }
+
+        function initNavigationEvents() {
+            // Botão voltar/avançar do navegador
+            window.addEventListener('popstate', () => {
+                const h = parseHash();
+                if (h) goTo(h.bookId, h.chapter, h.verse, { fromHash: true });
+            });
+
+            // Teclado
+            document.addEventListener('keydown', (e) => {
+                const tag = (e.target.tagName || '').toLowerCase();
+                const typing = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    openNavigator('books', true);
+                    return;
+                }
+
+                if (e.key === 'Escape') {
+                    if (isModalOpen('modal-card-generator')) closeCardModal();
+                    else if (isModalOpen('modal-verse-action')) closeVerseModal();
+                    else if (isModalOpen('modal-bg')) closeBgModal();
+                    else if (isModalOpen('modal-books')) {
+                        if ($('nav-view-chapters').style.display === 'flex') showBooks();
+                        else closeBookModal();
+                    }
+                    return;
+                }
+
+                if (typing || anyModalOpen() || state.activeTab !== 'reader') return;
+                if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+                if (e.key === 'ArrowLeft') navigateChapter(-1);
+                else if (e.key === 'ArrowRight') navigateChapter(1);
+                else if (e.key === '/') { e.preventDefault(); openNavigator('books', true); }
+            });
+
+            // Deslizar para os lados no painel de leitura (mobile)
+            const panel = $('reading-panel');
+            let touchStart = null;
+            panel.addEventListener('touchstart', (e) => {
+                const t = e.changedTouches[0];
+                touchStart = { x: t.clientX, y: t.clientY };
+            }, { passive: true });
+            panel.addEventListener('touchend', (e) => {
+                if (!touchStart) return;
+                const t = e.changedTouches[0];
+                const dx = t.clientX - touchStart.x;
+                const dy = t.clientY - touchStart.y;
+                touchStart = null;
+                const hasSelection = window.getSelection && window.getSelection().toString().length > 0;
+                if (!hasSelection && Math.abs(dx) > 80 && Math.abs(dy) < 45 && Math.abs(dx) > Math.abs(dy) * 2) {
+                    navigateChapter(dx < 0 ? 1 : -1);
+                }
+            }, { passive: true });
+
+            // Barra de progresso de leitura
+            window.addEventListener('scroll', updateReadProgress, { passive: true });
+        }
+
+        function updateReadProgress() {
+            const bar = $('read-progress');
+            if (!bar) return;
+            if (state.activeTab !== 'reader') { bar.style.width = '0'; return; }
+            const h = document.documentElement.scrollHeight - window.innerHeight;
+            bar.style.width = h > 0 ? `${Math.min(100, (window.scrollY / h) * 100)}%` : '0';
+        }
+
+        // =========================================================
+        // VERSÍCULO: AÇÕES
+        // =========================================================
         function openVerseModal(verseNum, text) {
             state.selectedVerseNum = verseNum;
             state.selectedVerseText = text;
 
             const book = getBookObj(state.currentBookId);
-            document.getElementById('verse-action-title').innerText = `${book.name} ${state.currentChapter}:${verseNum} (${state.currentVersion})`;
-            document.getElementById('verse-action-text').innerText = `"${text}"`;
+            $('verse-action-title').innerText = `${book.name} ${state.currentChapter}:${verseNum} (${state.currentVersion})`;
+            $('verse-action-text').innerText = `"${text}"`;
 
-            document.getElementById('modal-verse-action').classList.remove('hidden');
+            $('modal-verse-action').classList.remove('hidden');
         }
 
         function closeVerseModal() {
-            document.getElementById('modal-verse-action').classList.add('hidden');
+            $('modal-verse-action').classList.add('hidden');
         }
 
         function applyHighlight(color) {
@@ -994,14 +1635,14 @@
             }
             localStorage.setItem('lumina_highlights', JSON.stringify(state.highlights));
             closeVerseModal();
-            renderChapter();
+            renderChapter({ keepScroll: true });
             showToast(color ? "Versículo grifado!" : "Destaque removido.");
         }
 
         function copyCurrentVerse() {
             const book = getBookObj(state.currentBookId);
             const fullStr = `"${state.selectedVerseText}" - ${book.name} ${state.currentChapter}:${state.selectedVerseNum} (${state.currentVersion})`;
-            
+
             const textarea = document.createElement('textarea');
             textarea.value = fullStr;
             document.body.appendChild(textarea);
@@ -1014,9 +1655,10 @@
         }
 
         function openNoteDrawer() {
-            const noteText = prompt("Adicione sua anotação pessoal sobre este versículo:", "");
+            const verseKey = `${state.currentBookId}_${state.currentChapter}_${state.selectedVerseNum}`;
+            const existingNote = state.notes[verseKey] || "";
+            const noteText = prompt("Anotação pessoal sobre este versículo:", existingNote);
             if (noteText !== null) {
-                const verseKey = `${state.currentBookId}_${state.currentChapter}_${state.selectedVerseNum}`;
                 state.notes[verseKey] = noteText;
                 localStorage.setItem('lumina_notes', JSON.stringify(state.notes));
                 showToast("Anotação pessoal salva!");
@@ -1026,35 +1668,31 @@
 
         function generateVerseCard() {
             closeVerseModal();
-            const modal = document.getElementById('modal-card-generator');
+            const modal = $('modal-card-generator');
             modal.classList.remove('hidden');
 
-            const canvas = document.getElementById('verse-card-canvas');
+            const canvas = $('verse-card-canvas');
             const ctx = canvas.getContext('2d');
             const book = getBookObj(state.currentBookId);
 
-            // Card Gradient Background
             const grad = ctx.createLinearGradient(0, 0, 600, 600);
             grad.addColorStop(0, '#090d16');
             grad.addColorStop(1, '#1e293b');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, 600, 600);
 
-            // Gold Frame
             ctx.strokeStyle = '#eab308';
             ctx.lineWidth = 4;
             ctx.strokeRect(28, 28, 544, 544);
 
-            // Cross Icon
             ctx.fillStyle = '#eab308';
             ctx.font = 'bold 36px serif';
             ctx.textAlign = 'center';
             ctx.fillText('✝', 300, 100);
 
-            // Verse Text Wrapping
             ctx.fillStyle = '#f8fafc';
-            ctx.font = 'italic 26px "Cormorant Garamond", Georgia, serif';
-            
+            ctx.font = 'italic 24px "Cormorant Garamond", Georgia, serif';
+
             const words = state.selectedVerseText.split(' ');
             let line = '';
             let y = 220;
@@ -1065,30 +1703,28 @@
                 if (metrics.width > 440 && n > 0) {
                     ctx.fillText('"' + line.trim() + '"', 300, y);
                     line = words[n] + ' ';
-                    y += 40;
+                    y += 38;
                 } else {
                     line = testLine;
                 }
             }
             ctx.fillText('"' + line.trim() + '"', 300, y);
 
-            // Citation
             ctx.fillStyle = '#eab308';
             ctx.font = 'bold 22px sans-serif';
             ctx.fillText(`${book.name} ${state.currentChapter}:${state.selectedVerseNum} • ${state.currentVersion}`, 300, y + 80);
 
-            // Lumina Brand
             ctx.fillStyle = '#94a3b8';
             ctx.font = '14px sans-serif';
             ctx.fillText('Lumina Bíblia • Palavra Sagrada', 300, 530);
         }
 
         function closeCardModal() {
-            document.getElementById('modal-card-generator').classList.add('hidden');
+            $('modal-card-generator').classList.add('hidden');
         }
 
         function downloadVerseCard() {
-            const canvas = document.getElementById('verse-card-canvas');
+            const canvas = $('verse-card-canvas');
             const image = canvas.toDataURL('image/png');
             const a = document.createElement('a');
             a.href = image;
@@ -1097,23 +1733,20 @@
             showToast("Download da imagem gerado!");
         }
 
-        function playCurrentChapter() {
+        // =========================================================
+        // ÁUDIO
+        // =========================================================
+        async function playCurrentChapter() {
             const book = getBookObj(state.currentBookId);
             const version = state.currentVersion;
-            
-            let verses = [];
-            if (BIBLE_DATA[version] && BIBLE_DATA[version][state.currentBookId] && BIBLE_DATA[version][state.currentBookId][state.currentChapter]) {
-                verses = BIBLE_DATA[version][state.currentBookId][state.currentChapter];
-            } else {
-                verses = ["O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre."];
-            }
 
+            const { verses } = await fetchVersesForChapter(book, state.currentChapter, version);
             const fullText = verses.map(v => cleanScriptureText(v)).join(' ');
 
-            document.getElementById('player-title').innerText = `${book.name} ${state.currentChapter} (${version})`;
-            document.getElementById('player-subtitle').innerText = "Narração da Palavra Sagrada";
-            
-            const playerBar = document.getElementById('audio-player-bar');
+            $('player-title').innerText = `${book.name} ${state.currentChapter} (${version})`;
+            $('player-subtitle').innerText = "Narração da Palavra Sagrada";
+
+            const playerBar = $('audio-player-bar');
             playerBar.classList.remove('translate-y-40', 'opacity-0', 'pointer-events-none');
 
             if ('speechSynthesis' in window) {
@@ -1122,22 +1755,22 @@
                 currentUtterance.lang = 'pt-BR';
                 currentUtterance.rate = state.audioSpeed;
 
-                currentUtterance.onboundary = function(event) {
+                currentUtterance.onboundary = function (event) {
                     if (event.charIndex && fullText.length) {
                         const pct = Math.min(100, Math.round((event.charIndex / fullText.length) * 100));
-                        document.getElementById('audio-progress-fill').style.width = `${pct}%`;
+                        $('audio-progress-fill').style.width = `${pct}%`;
                     }
                 };
 
                 currentUtterance.onend = () => {
                     state.isPlayingAudio = false;
-                    document.getElementById('audio-progress-fill').style.width = '100%';
-                    document.getElementById('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-play text-xs"></i>`;
+                    $('audio-progress-fill').style.width = '100%';
+                    $('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-play text-xs"></i>`;
                 };
 
                 window.speechSynthesis.speak(currentUtterance);
                 state.isPlayingAudio = true;
-                document.getElementById('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-pause text-xs"></i>`;
+                $('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-pause text-xs"></i>`;
             } else {
                 showToast("Seu dispositivo não suporta narração de áudio.");
             }
@@ -1149,11 +1782,11 @@
                     if (window.speechSynthesis.paused) {
                         window.speechSynthesis.resume();
                         state.isPlayingAudio = true;
-                        document.getElementById('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-pause text-xs"></i>`;
+                        $('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-pause text-xs"></i>`;
                     } else {
                         window.speechSynthesis.pause();
                         state.isPlayingAudio = false;
-                        document.getElementById('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-play text-xs"></i>`;
+                        $('btn-audio-play-pause').innerHTML = `<i class="fa-solid fa-play text-xs"></i>`;
                     }
                 } else {
                     playCurrentChapter();
@@ -1166,7 +1799,8 @@
                 window.speechSynthesis.cancel();
             }
             state.isPlayingAudio = false;
-            const playerBar = document.getElementById('audio-player-bar');
+            $('audio-progress-fill').style.width = '0';
+            const playerBar = $('audio-player-bar');
             playerBar.classList.add('translate-y-40', 'opacity-0', 'pointer-events-none');
         }
 
@@ -1179,12 +1813,15 @@
 
         function toggleDramaMode() {
             state.isDramaMode = !state.isDramaMode;
-            document.getElementById('drama-mode-label').innerText = `Drama: ${state.isDramaMode ? 'ON' : 'OFF'}`;
+            $('drama-mode-label').innerText = `Drama: ${state.isDramaMode ? 'ON' : 'OFF'}`;
             showToast(state.isDramaMode ? "Modo Trilha Dramatizada Ativado" : "Modo Narração Direta");
         }
 
+        // =========================================================
+        // HISTÓRIAS
+        // =========================================================
         function renderStories() {
-            const grid = document.getElementById('stories-grid');
+            const grid = $('stories-grid');
             grid.innerHTML = '';
 
             DRAMA_STORIES.forEach(story => {
@@ -1211,10 +1848,10 @@
         }
 
         function playDramaStory(title, desc) {
-            document.getElementById('player-title').innerText = title;
-            document.getElementById('player-subtitle').innerText = "História Contada";
-            
-            const playerBar = document.getElementById('audio-player-bar');
+            $('player-title').innerText = title;
+            $('player-subtitle').innerText = "História Contada";
+
+            const playerBar = $('audio-player-bar');
             playerBar.classList.remove('translate-y-40', 'opacity-0', 'pointer-events-none');
 
             if ('speechSynthesis' in window) {
@@ -1225,22 +1862,96 @@
             }
         }
 
+        // =========================================================
+        // DEVOCIONAL
+        // =========================================================
+        const DEVOTIONAL_365 = [
+            { day: 1, ref: "Gênesis 1:1", text: "No princípio criou Deus os céus e a terra.", prayer: "Senhor Deus, abre meus olhos para ver a Tua criação e renova meu espírito neste novo ciclo. Amém." },
+            { day: 2, ref: "Salmos 23:1", text: "O SENHOR é o meu pastor; nada me faltará.", prayer: "Pai celeste, em Ti confio todas as minhas necessidades físicas e espirituais. Guia-me em paz." },
+            { day: 3, ref: "João 3:16", text: "Porque Deus tanto amou o mundo que deu o seu Filho Unigênito, para que todo o que nele crer não pereça, mas tenha a vida eterna.", prayer: "Obrigado, Senhor, pelo dom supremo do Teu amor libertador. Amém." },
+            { day: 4, ref: "Filipenses 4:13", text: "Tudo posso naquele que me fortalece.", prayer: "Conceda-me força e resiliência diante de cada desafio no dia de hoje." },
+            { day: 5, ref: "Provérbios 3:5", text: "Confie no SENHOR de todo o seu coração e não se apoie no seu próprio entendimento.", prayer: "Senhor, entrego o meu futuro em Tuas mãos perfeitas." }
+        ];
+
+        function renderDevotionalDay(dayNum) {
+            state.currentDevotionalDay = dayNum;
+            $('devotional-day-input').value = dayNum;
+            $('devotional-day-badge').innerText = `Dia ${dayNum} de 365`;
+
+            const item = DEVOTIONAL_365.find(d => d.day === dayNum) || {
+                day: dayNum,
+                ref: `Salmos ${(dayNum % 150) + 1}:1`,
+                text: "O SENHOR guardará a tua entrada e a tua saída, desde agora e para sempre.",
+                prayer: "Deus eterno, abençoa este dia com a Tua luz celestial e enche o meu coração de esperança."
+            };
+
+            $('daily-verse-text').innerText = `"${item.text}"`;
+            $('daily-verse-ref').innerText = item.ref;
+            $('daily-guided-prayer').innerText = `"${item.prayer}"`;
+
+            const isDone = state.devotionalCompleted.includes(dayNum);
+            const btn = $('btn-check-streak');
+
+            if (isDone) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-check-double"></i> Dia Concluído!`;
+                btn.className = "bg-slate-300 dark:bg-slate-800 text-slate-500 text-xs font-bold px-4 py-2.5 rounded-xl cursor-default flex items-center gap-1.5";
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> Marcar Dia Concluído`;
+                btn.className = "bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer";
+            }
+
+            const totalDone = state.devotionalCompleted.length;
+            $('devotional-completed-count').innerText = `${totalDone} / 365 dias`;
+            const pct = Math.min(100, Math.round((totalDone / 365) * 100));
+            $('devotional-progress-bar').style.width = `${pct}%`;
+        }
+
+        // Abre no leitor o capítulo da referência do devocional (ex: "Filipenses 4:13")
+        function openDailyVerseInReader() {
+            const ref = parseReference($('daily-verse-ref').innerText);
+            const matches = findBooks(ref.book);
+            if (!matches.length || !ref.chapter) {
+                showToast("Não foi possível abrir esta referência.");
+                return;
+            }
+            goTo(matches[0].book.id, ref.chapter, ref.verse);
+        }
+
+        function navigateDevotionalDay(delta) {
+            let nextDay = state.currentDevotionalDay + delta;
+            if (nextDay < 1) nextDay = 365;
+            if (nextDay > 365) nextDay = 1;
+            renderDevotionalDay(nextDay);
+        }
+
+        function jumpToDevotionalDay(dayVal) {
+            if (isNaN(dayVal)) return;
+            let targetDay = Math.min(365, Math.max(1, dayVal));
+            renderDevotionalDay(targetDay);
+        }
+
         function registerDevotionalRead() {
+            if (!state.devotionalCompleted.includes(state.currentDevotionalDay)) {
+                state.devotionalCompleted.push(state.currentDevotionalDay);
+                localStorage.setItem('lumina_devotional_completed', JSON.stringify(state.devotionalCompleted));
+            }
+
             state.streak += 1;
             localStorage.setItem('lumina_streak', state.streak.toString());
-            document.getElementById('streak-days').innerText = `${state.streak} Dias`;
-            document.getElementById('streak-badge').innerText = `🔥 ${state.streak}`;
-            const btn = document.getElementById('btn-check-streak');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-check"></i> Concluído Hoje!`;
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-            showToast("Devocional diário marcado com sucesso!");
+
+            $('streak-days').innerText = `${state.streak} Dias`;
+            $('streak-badge').innerText = `🔥 ${state.streak}`;
+
+            renderDevotionalDay(state.currentDevotionalDay);
+            showToast(`Dia ${state.currentDevotionalDay} marcado como concluído!`);
         }
 
         function shareDailyVerse() {
-            const verseText = document.getElementById('daily-verse-text').innerText;
-            const verseRef = document.getElementById('daily-verse-ref').innerText;
-            const fullStr = `${verseText} - ${verseRef}`;
+            const verseText = $('daily-verse-text').innerText;
+            const verseRef = $('daily-verse-ref').innerText;
+            const fullStr = `${verseText} - ${verseRef} (Devocional Lumina)`;
 
             const textarea = document.createElement('textarea');
             textarea.value = fullStr;
@@ -1252,24 +1963,27 @@
             showToast("Versículo diário copiado!");
         }
 
+        // =========================================================
+        // VISUAL / FUNDO
+        // =========================================================
         function openBgModal() {
-            document.getElementById('modal-bg').classList.remove('hidden');
+            $('modal-bg').classList.remove('hidden');
         }
 
         function closeBgModal() {
-            document.getElementById('modal-bg').classList.add('hidden');
+            $('modal-bg').classList.add('hidden');
         }
 
         function updateBgSettings() {
-            const opacity = document.getElementById('slider-opacity').value;
-            const blur = document.getElementById('slider-blur').value;
+            const opacity = $('slider-opacity').value;
+            const blur = $('slider-blur').value;
 
-            document.getElementById('label-opacity').innerText = `${opacity}%`;
-            document.getElementById('label-blur').innerText = `${blur}px`;
+            $('label-opacity').innerText = `${opacity}%`;
+            $('label-blur').innerText = `${blur}px`;
 
-            const overlay = document.getElementById('bg-overlay');
+            const overlay = $('bg-overlay');
             const opVal = opacity / 100;
-            
+
             if (state.theme === 'dark') {
                 overlay.style.backgroundColor = `rgba(9, 13, 22, ${opVal})`;
             } else {
@@ -1283,14 +1997,14 @@
 
         function updateFontSize(val) {
             state.fontSize = parseInt(val);
-            document.getElementById('label-font-size').innerText = `${val}px`;
+            $('label-font-size').innerText = `${val}px`;
             localStorage.setItem('lumina_font_size', val);
-            renderChapter();
+            renderChapter({ keepScroll: true });
         }
 
         function setBgPreset(url) {
-            document.getElementById('bg-layer').style.backgroundImage = `url('${url}')`;
-            localStorage.setItem('lumina_bg_url', url);
+            $('bg-layer').style.backgroundImage = `url('${url}')`;
+            try { localStorage.setItem('lumina_bg_url', url); } catch (e) { showToast("Imagem grande demais para salvar, mas aplicada nesta sessão."); }
             showToast("Plano de fundo atualizado!");
         }
 
@@ -1298,7 +2012,7 @@
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function (event) {
                     setBgPreset(event.target.result);
                 };
                 reader.readAsDataURL(file);
@@ -1308,60 +2022,65 @@
         function loadSavedBgSettings() {
             const savedUrl = localStorage.getItem('lumina_bg_url');
             if (savedUrl) {
-                document.getElementById('bg-layer').style.backgroundImage = `url('${savedUrl}')`;
+                $('bg-layer').style.backgroundImage = `url('${savedUrl}')`;
             }
             const savedOpacity = localStorage.getItem('lumina_bg_opacity') || '82';
             const savedBlur = localStorage.getItem('lumina_bg_blur') || '4';
 
-            document.getElementById('slider-opacity').value = savedOpacity;
-            document.getElementById('slider-blur').value = savedBlur;
+            $('slider-opacity').value = savedOpacity;
+            $('slider-blur').value = savedBlur;
+            $('slider-font-size').value = state.fontSize;
+            $('label-font-size').innerText = `${state.fontSize}px`;
             updateBgSettings();
         }
 
-        function switchTab(tabId) {
+        // =========================================================
+        // ABAS
+        // =========================================================
+        function switchTab(tabId, noScroll = false) {
             state.activeTab = tabId;
 
-            // Hide all tab content sections
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
-            // Reset Desktop Nav classes
+
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all";
             });
 
-            // Reset Mobile Bottom Nav active colors
-            const mobBtns = ['reader', 'stories', 'devotional'];
-            mobBtns.forEach(id => {
-                const mEl = document.getElementById(`mob-nav-${id}`);
+            ['reader', 'stories', 'devotional'].forEach(id => {
+                const mEl = $(`mob-nav-${id}`);
                 if (mEl) {
                     mEl.className = "flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 p-1.5 rounded-xl";
                 }
             });
 
-            // Activate target section
-            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
-            
-            // Highlight active Desktop Nav Button
-            const activeDesktopBtn = document.getElementById(`tab-btn-${tabId}`);
+            $(`tab-content-${tabId}`).classList.remove('hidden');
+
+            const activeDesktopBtn = $(`tab-btn-${tabId}`);
             if (activeDesktopBtn) {
                 activeDesktopBtn.className = "tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30";
             }
 
-            // Highlight active Mobile Nav Button
-            const activeMobBtn = document.getElementById(`mob-nav-${tabId}`);
+            const activeMobBtn = $(`mob-nav-${tabId}`);
             if (activeMobBtn) {
                 activeMobBtn.className = "flex flex-col items-center gap-1 text-amber-600 dark:text-amber-400 p-1.5 rounded-xl font-bold";
             }
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Botões laterais só aparecem na leitura
+            document.querySelectorAll('.side-nav-btn').forEach(b => {
+                b.style.visibility = tabId === 'reader' ? 'visible' : 'hidden';
+            });
+
+            if (!noScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateReadProgress();
         }
 
         function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = msg;
+            const toast = $('toast');
+            $('toast-message').innerText = msg;
             toast.classList.remove('translate-y-[-120px]', 'opacity-0');
-            
-            setTimeout(() => {
+
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => {
                 toast.classList.add('translate-y-[-120px]', 'opacity-0');
             }, 2800);
         }
